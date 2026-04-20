@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import ChatWindow from "@/components/ChatWindow";
+import RotaAvatar from "@/components/RotaAvatar";
 
 export default function TopicChatPage() {
   const router = useRouter();
@@ -21,15 +22,14 @@ export default function TopicChatPage() {
     <div className="h-[calc(100vh-140px)] flex gap-6">
       {/* Left: AI tutor character + whiteboard area */}
       <div className="hidden lg:flex flex-col w-72 shrink-0">
-        <div className="bg-white rounded-2xl border border-border p-6 text-center mb-4">
-          <div className="img-placeholder mx-auto mb-3" style={{ width: 100, height: 100, borderRadius: "50%" }}>
-            <span className="icon">🧑‍🔬</span>
-            <span className="spec">AI导师IP形象 · 100x100</span>
+        <div className="bg-white rounded-2xl border border-border p-6 text-center mb-4 rota-panel">
+          <div className="flex justify-center mb-3">
+            <RotaAvatar size="xs" className="mx-auto" />
           </div>
-          <h3 className="font-bold text-text">AI 科研导师</h3>
+          <h3 className="font-bold text-text">Rota 科研导师</h3>
           <p className="text-xs text-text-muted mt-1">正在了解你的兴趣和能力</p>
         </div>
-        <div className="flex-1 bg-white rounded-2xl border border-border p-5 overflow-hidden">
+        <div className="flex-1 bg-white rounded-2xl border border-border p-5 overflow-hidden rota-panel">
           <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">对话要点</h4>
           <div className="img-placeholder" style={{ width: "100%", height: 200 }}>
             <span className="spec">白板区域 · 实时记录对话关键信息 · 待设计</span>

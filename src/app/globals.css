@@ -1,29 +1,42 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-bg: #f8fafc;
+  --color-brand-cream: #fffaf0;
+  --color-brand-cloud: #fff4cf;
+  --color-brand-sun: #ffd84d;
+  --color-brand-sun-deep: #f2ba19;
+  --color-brand-sky: #47a8ff;
+  --color-brand-sky-deep: #1f7ae0;
+  --color-brand-sky-soft: #eaf5ff;
+  --color-brand-ink: #21324d;
+  --color-brand-ink-soft: #4b5f7c;
+  --color-brand-mist: #f4f9ff;
+  --color-bg: #fffaf0;
   --color-surface: #ffffff;
-  --color-surface2: #f1f5f9;
-  --color-surface3: #e2e8f0;
-  --color-border: #e2e8f0;
-  --color-border-light: #cbd5e1;
-  --color-text: #1e293b;
-  --color-text-dim: #475569;
-  --color-text-muted: #94a3b8;
-  --color-accent: #6366f1;
-  --color-accent2: #818cf8;
-  --color-green: #22c55e;
-  --color-amber: #f59e0b;
-  --color-rose: #f43f5e;
-  --color-cyan: #06b6d4;
-  --color-purple: #a855f7;
-  --color-pink: #ec4899;
+  --color-surface2: #fff7dc;
+  --color-surface3: #eef6ff;
+  --color-border: #e8deca;
+  --color-border-light: #d5c9b2;
+  --color-text: #21324d;
+  --color-text-dim: #4b5f7c;
+  --color-text-muted: #8190a7;
+  --color-accent: #47a8ff;
+  --color-accent2: #82c4ff;
+  --color-green: #51c38b;
+  --color-amber: #f2ba19;
+  --color-rose: #ff6b81;
+  --color-cyan: #8ed9ff;
+  --color-purple: #ffd84d;
+  --color-pink: #ffc6d6;
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: var(--color-bg);
+  background:
+    radial-gradient(circle at top left, rgba(255, 216, 77, 0.24), transparent 28%),
+    radial-gradient(circle at top right, rgba(71, 168, 255, 0.16), transparent 24%),
+    linear-gradient(180deg, #fffdf6 0%, var(--color-bg) 34%, var(--color-brand-mist) 100%);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -31,15 +44,15 @@ body {
 
 /* ─── Chat bubbles ─── */
 .chat-user {
-  background: #eef2ff;
-  border: 1px solid #c7d2fe;
+  background: #eef7ff;
+  border: 1px solid #bdddff;
   border-radius: 18px 18px 4px 18px;
 }
 .chat-assistant {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 18px 18px 18px 4px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.06);
 }
 
 /* ─── Scrollbar ─── */
@@ -55,7 +68,7 @@ body {
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #fff7dc 0%, #eef6ff 100%);
   border: 2px dashed var(--color-border-light);
   border-radius: 16px;
   color: var(--color-text-muted);
@@ -81,41 +94,41 @@ body {
 .glow-purple {
   position: fixed; pointer-events: none;
   width: 600px; height: 600px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255,216,77,0.22) 0%, transparent 70%);
 }
 .glow-cyan {
   position: fixed; pointer-events: none;
   width: 500px; height: 500px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(6,182,212,0.06) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(71,168,255,0.16) 0%, transparent 70%);
 }
 
 /* ─── Map node states ─── */
 .node-completed {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  border: 2px solid #22c55e;
+  background: linear-gradient(135deg, #ebfff5 0%, #d6f8e7 100%);
+  border: 2px solid #51c38b;
 }
 .node-active {
-  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-  border: 2px solid #6366f1;
-  box-shadow: 0 0 0 4px rgba(99,102,241,0.15);
+  background: linear-gradient(135deg, #eef7ff 0%, #dff0ff 100%);
+  border: 2px solid #47a8ff;
+  box-shadow: 0 0 0 4px rgba(71,168,255,0.15);
   animation: activePulse 2.5s ease-in-out infinite;
 }
 .node-locked {
-  background: #f1f5f9;
-  border: 2px solid #e2e8f0;
+  background: #f9f5ea;
+  border: 2px solid #eadfcb;
   opacity: 0.6;
 }
 
 @keyframes activePulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(99,102,241,0.15); }
-  50% { box-shadow: 0 0 0 8px rgba(99,102,241,0.08), 0 0 24px rgba(99,102,241,0.06); }
+  0%, 100% { box-shadow: 0 0 0 4px rgba(71,168,255,0.15); }
+  50% { box-shadow: 0 0 0 8px rgba(71,168,255,0.08), 0 0 24px rgba(71,168,255,0.08); }
 }
 
 /* ─── Grade badge colors ─── */
-.grade-a { background: #dcfce7; color: #16a34a; border-color: #22c55e; }
-.grade-b { background: #eef2ff; color: #4f46e5; border-color: #6366f1; }
-.grade-c { background: #fef3c7; color: #d97706; border-color: #f59e0b; }
-.grade-d { background: #ffe4e6; color: #e11d48; border-color: #f43f5e; }
+.grade-a { background: #e9fff3; color: #259660; border-color: #51c38b; }
+.grade-b { background: #eef7ff; color: #1f7ae0; border-color: #47a8ff; }
+.grade-c { background: #fff5cf; color: #c48700; border-color: #f2ba19; }
+.grade-d { background: #ffe8ec; color: #e14d68; border-color: #ff6b81; }
 
 /* ─── Stat card gradient borders ─── */
 .stat-card {
@@ -130,4 +143,27 @@ body {
   top: 0; left: 0; right: 0;
   height: 4px;
   background: var(--stat-color, var(--color-accent));
+}
+
+.rota-panel {
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(232, 222, 202, 0.92);
+  box-shadow: 0 16px 40px rgba(31, 41, 55, 0.08);
+  backdrop-filter: blur(16px);
+}
+
+.rota-grid {
+  position: relative;
+}
+
+.rota-grid::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(71, 168, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(71, 168, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 85%);
 }

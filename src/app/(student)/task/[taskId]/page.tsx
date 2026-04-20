@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import ChatWindow from "@/components/ChatWindow";
+import RotaAvatar from "@/components/RotaAvatar";
 
 interface TaskData {
   id: string;
@@ -129,11 +130,9 @@ function TaskContent() {
               onClick={() => setShowChat(!showChat)}
               className="w-full flex items-center gap-3 mb-4"
             >
-              <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                <span className="text-lg">🧑‍🏫</span>
-              </div>
+              <RotaAvatar size="xxs" />
               <div className="text-left flex-1">
-                <p className="font-semibold text-sm text-text">AI 导师</p>
+                <p className="font-semibold text-sm text-text">Rota 导师</p>
                 <p className="text-xs text-text-dim">有问题随时问我</p>
               </div>
               <svg

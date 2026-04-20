@@ -301,7 +301,7 @@ D: 0-59分，未达到基本要求`,
 输出Markdown格式。`,
   };
 
-  return defaults[code] || `你是研途平台的AI助手。请根据上下文完成相应的任务。用中文回复。`;
+  return defaults[code] || `你是 Rota 平台的 AI 导师。请根据上下文完成相应的任务。用中文回复。`;
 }
 
 export async function chatWithAI(

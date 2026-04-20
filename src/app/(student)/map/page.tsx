@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import RotaAvatar from "@/components/RotaAvatar";
 
 interface Task {
   id: string;
@@ -123,14 +124,10 @@ function MapContent() {
   const activePhase = project.phases.find((p) => p.status === "active") || project.phases[0];
   const activePhaseIndex = project.phases.indexOf(activePhase);
 
-  // Auto-select active phase
-  useEffect(() => {
-    if (activePhase && !selectedPhase) {
-      setSelectedPhase(activePhase.id);
-    }
-  }, [activePhase, selectedPhase]);
-
-  const selectedPhaseData = project.phases.find((p) => p.id === selectedPhase);
+  const effectiveSelectedPhaseId = selectedPhase ?? activePhase?.id ?? null;
+  const selectedPhaseData = project.phases.find(
+    (p) => p.id === effectiveSelectedPhaseId
+  );
 
   const totalTasks = project.phases.reduce((sum, p) => sum + p.tasks.length, 0);
   const completedTasks = project.phases.reduce(
@@ -241,7 +238,7 @@ function MapContent() {
               const isLocked = phase.status === "locked";
               const isCompleted = phase.status === "completed";
               const isActive = phase.status === "active";
-              const isSelected = selectedPhase === phase.id;
+              const isSelected = effectiveSelectedPhaseId === phase.id;
               const tasksDone = phase.tasks.filter((t) => t.status === "completed" || t.status === "graded").length;
               const taskProgress = phase.tasks.length > 0 ? Math.round((tasksDone / phase.tasks.length) * 100) : 0;
 
@@ -426,7 +423,7 @@ function MapContent() {
                   const isLocked = phase.status === "locked";
                   const isCompleted = phase.status === "completed";
                   const isActive = phase.status === "active";
-                  const isSelected = selectedPhase === phase.id;
+                  const isSelected = effectiveSelectedPhaseId === phase.id;
 
                   return (
                     <button
@@ -479,8 +476,8 @@ function MapContent() {
 
               {/* Tutor greeting */}
               <div className="mt-3 flex items-start gap-2">
-                <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
-                  <span className="text-sm">🧑‍🔬</span>
+                <div className="shrink-0">
+                  <RotaAvatar size="xxs" />
                 </div>
                 <div className="bg-white/80 rounded-lg rounded-tl-sm px-3 py-2">
                   <p className="text-[11px] text-text-dim leading-relaxed">

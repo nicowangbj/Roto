@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ChatWindow from "@/components/ChatWindow";
+import RotaAvatar from "@/components/RotaAvatar";
 
 interface Task {
   id: string;
@@ -80,7 +81,7 @@ function PlanDetailContent() {
               onClick={() => setShowChat(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-accent/10 hover:bg-accent/20 text-accent font-medium rounded-xl transition-colors text-sm"
             >
-              <span>🧑‍🔬</span>
+              <RotaAvatar size="xxs" />
               与导师沟通修改
             </button>
           )}
@@ -178,11 +179,9 @@ function PlanDetailContent() {
             {/* Chat header */}
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center">
-                  <span className="text-base">🧑‍🔬</span>
-                </div>
+                <RotaAvatar size="xxs" />
                 <div>
-                  <h3 className="text-sm font-bold text-text">AI 导师</h3>
+                  <h3 className="text-sm font-bold text-text">Rota 导师</h3>
                   <p className="text-xs text-text-muted">沟通计划修改</p>
                 </div>
               </div>

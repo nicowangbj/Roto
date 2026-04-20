@@ -68,9 +68,9 @@ export async function POST(req: NextRequest) {
       conversationId: conversation.id,
       reply,
     });
-  } catch (error) {
+  } catch {
     // If Gemini API fails (e.g., no API key), return a placeholder response
-    const placeholder = "我是研途AI导师。当前AI服务未配置，请在 .env 文件中设置 GEMINI_API_KEY。我会在配置完成后为你提供完整的科研指导服务。";
+    const placeholder = "我是 Rota AI 导师。当前 AI 服务还未配置，请在 .env 文件中设置 GEMINI_API_KEY。配置完成后，我会继续陪你把研究这件事讲清楚、做下去。";
 
     await prisma.message.create({
       data: {

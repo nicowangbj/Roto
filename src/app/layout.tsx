@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "研途 ResearchFlow",
-  description: "AI 科研规划管理导师 - 让每个孩子都能在 AI 时代探索自己感兴趣的课题",
+  title: "Rota",
+  description: "Rota AI 科研导师 - 帮你在混乱里看见重点，在焦虑里找到下一步",
 };
 
 export default function RootLayout({

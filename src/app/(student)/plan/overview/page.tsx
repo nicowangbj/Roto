@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import RotaAvatar from "@/components/RotaAvatar";
 
 interface Phase {
   id: string;
@@ -101,8 +102,8 @@ function OverviewContent() {
 
       {/* AI tutor interpretation */}
       <div className="bg-accent/5 rounded-2xl p-5 mb-8 flex gap-4">
-        <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0">
-          <span className="text-lg">🧑‍🔬</span>
+        <div className="shrink-0">
+          <RotaAvatar size="xxs" />
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-bold text-accent mb-1">导师解读</h3>

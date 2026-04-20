@@ -1,134 +1,101 @@
-# Research Flow 项目交付说明
+# 研途 ResearchFlow
 
-这是一份给项目接收方使用的说明。照着下面操作，即可在本地打开网站。
+AI 科研规划管理导师 —— 让每个孩子都能在 AI 时代探索自己感兴趣的课题。
 
-## 1. 你会收到什么
+## 本地运行
 
-建议交付整个项目目录，并确保至少包含以下内容：
-
-- `src/`
-- `public/`
-- `prisma/`
-- `src/generated/`
-- `package.json`
-- `package-lock.json`
-- `next.config.ts`
-- `tsconfig.json`
-
-如果希望对方打开后直接看到当前已有数据，请务必一并提供：
-
-- `prisma/dev.db`
-
-不建议打包这些目录：
-
-- `node_modules/`
-- `.next/`
-
-## 2. 本地运行方式
-
-对方需要通过终端启动项目。
-
-### 第一步：进入项目目录
+### 1. 克隆项目
 
 ```bash
+git clone git@github.com:nicowangbj/research-flow.git
 cd research-flow
 ```
 
-### 第二步：安装依赖
+### 2. 安装依赖
 
 ```bash
 npm install
 ```
 
-### 第三步：启动网站
+### 3. 配置环境变量
+
+在项目根目录创建 `.env` 文件：
+
+```bash
+# 数据库
+DATABASE_URL="file:./dev.db"
+
+# Session 密钥（必填，用于用户登录鉴权，可用以下命令生成）
+# openssl rand -base64 32
+SESSION_SECRET="替换为你自己生成的随机字符串"
+
+# Gemini API Key（选填，不填则 AI 功能使用占位回复）
+GEMINI_API_KEY=""
+
+# 应用名称
+NEXT_PUBLIC_APP_NAME="研途 ResearchFlow"
+```
+
+### 4. 初始化数据库
+
+```bash
+npx prisma generate
+npx prisma migrate dev
+npx tsx prisma/seed.ts
+```
+
+这会创建数据库并写入 24 条 AI 策略 + 一个演示账号。
+
+### 5. 启动项目
 
 ```bash
 npm run dev
 ```
 
-### 第四步：在浏览器打开
+浏览器打开 http://localhost:3000
 
-默认地址：
+### 6. 登录
 
-- [http://localhost:3000](http://localhost:3000)
+注册新账号，或使用演示账号：
 
-如果 `3000` 端口被占用，终端会提示改用 `3001` 或其他端口，请按终端提示打开对应地址。
+- **邮箱**: `demo@researchflow.com`
+- **密码**: `demo123`
 
-## 3. AI 功能环境变量
+## 技术栈
 
-如果需要使用 AI 相关功能，需要在项目根目录创建 `.env` 文件，并填写：
+- **框架**: Next.js 16 + React 19 + TypeScript
+- **样式**: Tailwind CSS 4
+- **数据库**: SQLite (better-sqlite3) + Prisma 7
+- **AI**: Google Gemini API
+- **认证**: JWT (jose) + bcryptjs
 
-```bash
-GEMINI_API_KEY=你的_Gemini_API_Key
+## 项目结构
+
+```
+src/
+├── app/
+│   ├── (student)/     # 学生端页面（选题、计划、任务、日志等）
+│   ├── admin/         # 管理后台（AI 策略配置）
+│   ├── api/           # API 路由
+│   ├── login/         # 登录/注册页
+│   └── page.tsx       # 产品首页
+├── components/        # 复用组件
+├── lib/               # 工具库（Prisma、Gemini、Auth）
+└── proxy.ts           # 路由鉴权
+prisma/
+├── schema.prisma      # 数据模型
+├── seed.ts            # 种子数据
+└── migrations/        # 数据库迁移
 ```
 
-如果没有这个 key，网站中依赖 Gemini 的功能可能无法正常使用。
+## 常见问题
 
-## 4. 数据库说明
+**端口占用**: 终端会提示可用端口，直接打开即可。
 
-本项目当前使用本地 SQLite 数据库，数据库文件路径为：
+**没有数据**: 确认已执行 `npx prisma migrate dev` 和 `npx tsx prisma/seed.ts`。
 
-```bash
-prisma/dev.db
-```
+**AI 功能不可用**: 检查 `.env` 中是否配置了 `GEMINI_API_KEY`。未配置时系统使用占位回复，不影响其他功能。
 
-### 推荐交付方式
+## License
 
-直接把 `prisma/dev.db` 一起发给对方。
-
-这样对方执行完 `npm install` 和 `npm run dev` 后，就可以直接看到现有数据。
-
-### 如果没有提供 `prisma/dev.db`
-
-对方需要自己初始化数据库：
-
-```bash
-npm run db:migrate
-npm run db:seed
-```
-
-## 5. 最简启动说明
-
-如果你只想发给对方一句最短说明，可以直接发下面这段：
-
-```bash
-进入项目目录后，先运行 npm install，再运行 npm run dev，然后用浏览器打开 http://localhost:3000。
-如果页面需要 AI 功能，请先在项目根目录创建 .env 文件并配置 GEMINI_API_KEY。
-```
-
-## 6. 常见问题
-
-### 端口占用
-
-如果终端提示 `3000` 端口被占用，不用处理，直接打开终端提示的新地址即可。
-
-### 没有数据
-
-通常是因为没有带上 `prisma/dev.db`，或者没有执行：
-
-```bash
-npm run db:migrate
-npm run db:seed
-```
-
-### AI 功能报错
-
-优先检查：
-
-- 是否已创建 `.env`
-- 是否已正确填写 `GEMINI_API_KEY`
-
-## 7. 交付建议
-
-最省事的交付方式是：
-
-1. 发完整项目源码
-2. 一并带上 `prisma/dev.db`
-3. 附上本 README
-
-这样对方通常只需要执行：
-
-```bash
-npm install
-npm run dev
-```
+Apache-2.0

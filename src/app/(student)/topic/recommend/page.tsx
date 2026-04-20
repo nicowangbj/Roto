@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import RotaAvatar from "@/components/RotaAvatar";
 
 interface Topic {
   name: string;
@@ -144,12 +145,11 @@ function RecommendContent() {
     <div className="h-[calc(100vh-140px)] flex gap-6">
       {/* Left: Tutor character panel */}
       <div className="hidden lg:flex flex-col w-64 shrink-0">
-        <div className="bg-white rounded-2xl border border-border p-5 text-center mb-4">
-          <div className="img-placeholder mx-auto mb-3" style={{ width: 120, height: 120, borderRadius: "20px" }}>
-            <span className="icon">🧑‍🔬</span>
-            <span className="spec">AI导师全身形象 · 120x120</span>
+        <div className="bg-white rounded-2xl border border-border p-5 text-center mb-4 rota-panel">
+          <div className="flex justify-center mb-3">
+            <RotaAvatar size="sm" scene="welcome" />
           </div>
-          <h3 className="font-bold text-text text-sm">AI 科研导师</h3>
+          <h3 className="font-bold text-text text-sm">Rota 科研导师</h3>
           <p className="text-xs text-text-muted mt-1">正在为你解读课题</p>
 
           {/* Voice wave animation when speaking */}
@@ -169,7 +169,7 @@ function RecommendContent() {
         </div>
 
         {/* Quick topic nav */}
-        <div className="bg-white rounded-2xl border border-border p-4 flex-1">
+        <div className="bg-white rounded-2xl border border-border p-4 flex-1 rota-panel">
           <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">推荐课题</h4>
           <div className="space-y-2">
             {topics.map((topic, i) => (
@@ -219,8 +219,8 @@ function RecommendContent() {
             <div key={i}>
               {msg.role === "tutor" && (
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 mt-1">
-                    <span className="text-sm">🧑‍🔬</span>
+                  <div className="shrink-0 mt-1">
+                    <RotaAvatar size="xxs" />
                   </div>
                   <div className="flex-1 space-y-3">
                     <div className="bg-white rounded-2xl rounded-tl-md border border-border px-4 py-3 max-w-[85%]">

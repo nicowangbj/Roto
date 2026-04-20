@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 
 interface Message {
@@ -84,8 +85,16 @@ export default function ChatWindow({
             >
               {msg.role === "assistant" && (
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-[10px]">🧑‍🏫</span>
-                  <span className="text-xs font-semibold text-accent">AI 导师</span>
+                  <span className="relative w-6 h-6 overflow-hidden rounded-full border border-white bg-brand-cloud/80 shrink-0">
+                    <Image
+                      src="/api/rota-ip"
+                      alt="Rota"
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  </span>
+                  <span className="text-xs font-semibold text-accent">Rota 导师</span>
                 </div>
               )}
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -98,8 +107,16 @@ export default function ChatWindow({
           <div className="flex justify-start">
             <div className="chat-assistant px-4 py-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-[10px]">🧑‍🏫</span>
-                <span className="text-xs font-semibold text-accent">AI 导师</span>
+                <span className="relative w-6 h-6 overflow-hidden rounded-full border border-white bg-brand-cloud/80 shrink-0">
+                  <Image
+                    src="/api/rota-ip"
+                    alt="Rota"
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                </span>
+                <span className="text-xs font-semibold text-accent">Rota 导师</span>
               </div>
               <div className="flex gap-1.5 mt-2">
                 <span className="w-2 h-2 bg-accent/40 rounded-full animate-bounce" />
