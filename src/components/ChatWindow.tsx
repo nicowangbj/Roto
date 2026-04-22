@@ -87,7 +87,7 @@ export default function ChatWindow({
                 <div className="flex items-center gap-2 mb-1">
                   <span className="relative w-6 h-6 overflow-hidden rounded-full border border-white bg-brand-cloud/80 shrink-0">
                     <Image
-                      src="/api/rota-ip"
+                      src="/rota-ip.png"
                       alt="Rota"
                       fill
                       unoptimized
@@ -109,7 +109,7 @@ export default function ChatWindow({
               <div className="flex items-center gap-2 mb-1">
                 <span className="relative w-6 h-6 overflow-hidden rounded-full border border-white bg-brand-cloud/80 shrink-0">
                   <Image
-                    src="/api/rota-ip"
+                    src="/rota-ip.png"
                     alt="Rota"
                     fill
                     unoptimized

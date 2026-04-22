@@ -67,7 +67,7 @@ export default function RotaAvatar({
         />
       </div>
       <Image
-        src="/api/rota-ip"
+        src="/rota-ip.png"
         alt="Rota IP"
         fill
         unoptimized
