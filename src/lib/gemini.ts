@@ -626,19 +626,21 @@ export async function chatWithAI(
 ): Promise<string> {
   const systemPrompt = await getStrategyPrompt(strategyCode, locale);
 
-  const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
-
   const contextLabel = locale === "zh" ? "上下文信息：" : "Context:";
   const fullPrompt = context
     ? `${systemPrompt}\n\n${contextLabel}\n${context}`
     : systemPrompt;
+
+  const model = genAI.getGenerativeModel({
+    model: DEFAULT_MODEL,
+    systemInstruction: fullPrompt,
+  });
 
   const chat = model.startChat({
     history: messages.slice(0, -1).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     })),
-    systemInstruction: { parts: [{ text: fullPrompt }] },
   });
 
   const lastMessage = messages[messages.length - 1];
@@ -673,19 +675,21 @@ export async function streamChatWithAI(
 ) {
   const systemPrompt = await getStrategyPrompt(strategyCode, locale);
 
-  const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
-
   const contextLabel = locale === "zh" ? "上下文信息：" : "Context:";
   const fullPrompt = context
     ? `${systemPrompt}\n\n${contextLabel}\n${context}`
     : systemPrompt;
+
+  const model = genAI.getGenerativeModel({
+    model: DEFAULT_MODEL,
+    systemInstruction: fullPrompt,
+  });
 
   const chat = model.startChat({
     history: messages.slice(0, -1).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     })),
-    systemInstruction: { parts: [{ text: fullPrompt }] },
   });
 
   const lastMessage = messages[messages.length - 1];
