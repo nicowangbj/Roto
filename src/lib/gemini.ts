@@ -3,7 +3,7 @@ import { prisma } from "./prisma";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
-const DEFAULT_MODEL = "gemini-3.1-flash-preview";
+const DEFAULT_MODEL = "gemini-3-flash-preview";
 
 export async function getStrategyPrompt(
   strategyCode: string,
