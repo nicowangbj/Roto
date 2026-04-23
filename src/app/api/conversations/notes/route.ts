@@ -3,7 +3,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getSessionUser } from "@/lib/session-user";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-const MODEL = "gemini-2.0-flash-lite";
+const MODEL = "gemini-2.5-flash";
 
 interface InboundMessage {
   role: "user" | "assistant";

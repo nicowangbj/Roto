@@ -1,9 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { prisma } from "./prisma";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
-const DEFAULT_MODEL = "gemini-2.5-flash-lite";
+const DEFAULT_MODEL = "gemini-2.5-flash";
 
 export async function getStrategyPrompt(
   strategyCode: string,
@@ -627,16 +627,13 @@ export async function chatWithAI(
   const systemPrompt = await getStrategyPrompt(strategyCode, locale);
 
   const contextLabel = locale === "zh" ? "上下文信息：" : "Context:";
-  const fullPrompt = context
+  const systemInstruction = context
     ? `${systemPrompt}\n\n${contextLabel}\n${context}`
     : systemPrompt;
 
-  const model = genAI.getGenerativeModel({
+  const chat = ai.chats.create({
     model: DEFAULT_MODEL,
-    systemInstruction: fullPrompt,
-  });
-
-  const chat = model.startChat({
+    config: { systemInstruction },
     history: messages.slice(0, -1).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
@@ -644,8 +641,8 @@ export async function chatWithAI(
   });
 
   const lastMessage = messages[messages.length - 1];
-  const result = await chat.sendMessage(lastMessage.content);
-  return result.response.text();
+  const result = await chat.sendMessage({ message: lastMessage.content });
+  return result.text ?? "";
 }
 
 export async function generateWithAI(
@@ -656,15 +653,16 @@ export async function generateWithAI(
 ): Promise<string> {
   const systemPrompt = await getStrategyPrompt(strategyCode, locale);
 
-  const model = genAI.getGenerativeModel({ model: DEFAULT_MODEL });
-
   const contextLabel = locale === "zh" ? "上下文信息：" : "Context:";
-  const fullPrompt = context
+  const contents = context
     ? `${systemPrompt}\n\n${contextLabel}\n${context}\n\n${input}`
     : `${systemPrompt}\n\n${input}`;
 
-  const result = await model.generateContent(fullPrompt);
-  return result.response.text();
+  const result = await ai.models.generateContent({
+    model: DEFAULT_MODEL,
+    contents,
+  });
+  return result.text ?? "";
 }
 
 export async function streamChatWithAI(
@@ -676,16 +674,13 @@ export async function streamChatWithAI(
   const systemPrompt = await getStrategyPrompt(strategyCode, locale);
 
   const contextLabel = locale === "zh" ? "上下文信息：" : "Context:";
-  const fullPrompt = context
+  const systemInstruction = context
     ? `${systemPrompt}\n\n${contextLabel}\n${context}`
     : systemPrompt;
 
-  const model = genAI.getGenerativeModel({
+  const chat = ai.chats.create({
     model: DEFAULT_MODEL,
-    systemInstruction: fullPrompt,
-  });
-
-  const chat = model.startChat({
+    config: { systemInstruction },
     history: messages.slice(0, -1).map((m) => ({
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
@@ -693,6 +688,6 @@ export async function streamChatWithAI(
   });
 
   const lastMessage = messages[messages.length - 1];
-  const result = await chat.sendMessageStream(lastMessage.content);
-  return result.stream;
+  const stream = await chat.sendMessageStream({ message: lastMessage.content });
+  return stream;
 }
