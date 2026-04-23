@@ -1,14 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
+import Image from "next/image";
 import ChatWindow from "@/components/ChatWindow";
-import RotaAvatar from "@/components/RotaAvatar";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+interface ProfileNote {
+  category: string;
+  summary: string;
 }
 
 export default function TopicChatPage() {
@@ -17,6 +22,12 @@ export default function TopicChatPage() {
   const t = useTranslations("topicChat");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [notes, setNotes] = useState<ProfileNote[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSignatureRef = useRef<string>("");
+  const abortRef = useRef<AbortController | null>(null);
 
   const handleGenerateProfile = async () => {
     if (!conversationId) return;
@@ -27,36 +38,77 @@ export default function TopicChatPage() {
     router.push(`/${locale}/topic/profile?quickStart=1`);
   };
 
-  const notes = useMemo(() => {
-    return messages
-      .filter((m) => m.role === "user" && m.content.trim().length > 0)
-      .slice(-5)
-      .reverse()
-      .map((m, idx) => ({
-        id: `${idx}-${m.content.slice(0, 8)}`,
-        text: m.content.trim(),
-      }));
-  }, [messages]);
+  // Debounced profile-note generation: fires ~2.5s after the last chat update,
+  // skips when user messages haven't changed since the last run.
+  useEffect(() => {
+    const userMessages = messages.filter(
+      (m) => m.role === "user" && m.content.trim().length > 0
+    );
+    if (userMessages.length === 0) return;
+
+    const signature = userMessages.map((m) => m.content.trim()).join("\n");
+    if (signature === lastSignatureRef.current) return;
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(async () => {
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      setNotesLoading(true);
+      try {
+        const res = await fetch("/api/conversations/notes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: userMessages, locale }),
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as { notes?: ProfileNote[] };
+        if (controller.signal.aborted) return;
+        if (Array.isArray(data.notes)) {
+          setNotes(data.notes);
+          lastSignatureRef.current = signature;
+        }
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") console.error(err);
+      } finally {
+        if (!controller.signal.aborted) setNotesLoading(false);
+      }
+    }, 2500);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [messages, locale]);
 
   return (
     <div className="h-[calc(100vh-140px)] flex gap-6">
-      {/* Left: AI tutor character + whiteboard area */}
+      {/* Left: AI tutor character + profile notes */}
       <div className="hidden lg:flex flex-col w-72 shrink-0">
         <div className="bg-white rounded-2xl border border-border p-6 text-center mb-4 rota-panel">
           <div className="flex justify-center mb-3">
-            <RotaAvatar size="xs" className="mx-auto" />
+            <Image src="/rota-think.png" alt="Rota" width={120} height={120} className="object-contain" />
           </div>
           <h3 className="font-bold text-text">{t("tutorTitle")}</h3>
           <p className="text-xs text-text-muted mt-1">{t("tutorStatus")}</p>
         </div>
         <div className="flex-1 bg-white rounded-2xl border border-border p-5 overflow-hidden rota-panel flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">{t("dialogNotes")}</h4>
-            {notes.length > 0 && (
+            <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+              {t("dialogNotes")}
+            </h4>
+            {notesLoading ? (
+              <span className="flex items-center gap-1 text-[10px] text-accent">
+                <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+                <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse [animation-delay:0.15s]" />
+                <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse [animation-delay:0.3s]" />
+              </span>
+            ) : notes.length > 0 ? (
               <span className="text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
                 {notes.length}
               </span>
-            )}
+            ) : null}
           </div>
           {notes.length === 0 ? (
             <div className="flex-1 flex items-center justify-center text-center px-2">
@@ -68,13 +120,17 @@ export default function TopicChatPage() {
             <ul className="flex-1 overflow-y-auto space-y-3 pr-1 -mr-1">
               {notes.map((note, idx) => (
                 <li
-                  key={note.id}
-                  className="relative pl-3 border-l-2 border-accent/40 text-xs text-text-dim leading-relaxed"
+                  key={`${idx}-${note.summary.slice(0, 8)}`}
+                  className="relative pl-3 border-l-2 border-accent/40 leading-relaxed"
                 >
-                  <span className="block text-[10px] font-semibold text-accent/80 uppercase tracking-wider mb-1">
-                    {t("noteLabel", { index: notes.length - idx })}
+                  {note.category && (
+                    <span className="block text-[10px] font-semibold text-accent/80 uppercase tracking-wider mb-1">
+                      {note.category}
+                    </span>
+                  )}
+                  <span className="block text-xs text-text">
+                    {note.summary}
                   </span>
-                  <span className="line-clamp-3">{note.text}</span>
                 </li>
               ))}
             </ul>

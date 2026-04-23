@@ -106,9 +106,9 @@
     "tutorTitle": "Rota 科研导师",
     "tutorStatus": "正在了解你的兴趣和能力",
     "dialogNotes": "对话要点",
-    "notesEmpty": "开始聊天，这里会把你每次说的重点记下来，方便导师随时回看你的兴趣、能力和时间。",
+    "notesEmpty": "开始聊天，这里会从你的对话里提炼出关于兴趣、能力、时间、偏好的画像要点。",
     "noteLabel": "要点 {index}",
-    "notesFootnote": "自动取自你最近 5 次发言",
+    "notesFootnote": "Rota 从你的对话中提炼，随聊天自动更新",
     "placeholder": "和导师聊聊你感兴趣的事情...",
     "initialMessage": "你好！我是你的科研导师。很高兴认识你！\n\n在帮你找到适合的研究课题之前，我想先了解一下你。能告诉我你平时最喜欢做什么，或者对哪些领域比较感兴趣吗？"
   },
