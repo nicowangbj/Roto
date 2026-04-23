@@ -418,29 +418,31 @@ Output JSON format:
       zh: `基于评分结果，生成评语和改进建议。要求：
 1. 评语具体，针对学生的实际提交内容
 2. 语气鼓励积极
-3. 分级提供改进建议
+3. 必须为C、B、A三个等级分别提供改进建议（C是当前最低可通过的目标，A是最高目标）
 
 输出JSON格式：
 {
   "feedback": "总体评语",
   "strengths": ["优点"],
   "improvements": [
-    {"targetGrade": "A", "suggestions": ["具体建议"]},
-    {"targetGrade": "B", "suggestions": ["具体建议"]}
+    {"targetGrade": "C", "suggestions": ["达到C级的具体建议"]},
+    {"targetGrade": "B", "suggestions": ["达到B级的具体建议"]},
+    {"targetGrade": "A", "suggestions": ["达到A级的具体建议"]}
   ]
 }`,
       en: `Based on the grading result, generate feedback and improvement suggestions. Requirements:
 1. Feedback should be specific and address the student's actual submission
 2. Tone should be encouraging and positive
-3. Provide tiered improvement suggestions
+3. Must provide suggestions for all three grades: C, B, and A (C is the minimum passing target, A is the highest)
 
 Output JSON format:
 {
   "feedback": "Overall feedback",
   "strengths": ["strengths"],
   "improvements": [
-    {"targetGrade": "A", "suggestions": ["specific suggestion"]},
-    {"targetGrade": "B", "suggestions": ["specific suggestion"]}
+    {"targetGrade": "C", "suggestions": ["specific suggestions to reach C"]},
+    {"targetGrade": "B", "suggestions": ["specific suggestions to reach B"]},
+    {"targetGrade": "A", "suggestions": ["specific suggestions to reach A"]}
   ]
 }`,
     },
