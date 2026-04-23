@@ -638,7 +638,7 @@ export async function chatWithAI(
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     })),
-    systemInstruction: fullPrompt,
+    systemInstruction: { parts: [{ text: fullPrompt }] },
   });
 
   const lastMessage = messages[messages.length - 1];
@@ -685,7 +685,7 @@ export async function streamChatWithAI(
       role: m.role === "assistant" ? "model" : "user",
       parts: [{ text: m.content }],
     })),
-    systemInstruction: fullPrompt,
+    systemInstruction: { parts: [{ text: fullPrompt }] },
   });
 
   const lastMessage = messages[messages.length - 1];
