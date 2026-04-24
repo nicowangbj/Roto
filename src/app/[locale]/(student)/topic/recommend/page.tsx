@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 import { saveTopicDraft } from "@/lib/topic-draft";
 
 interface Topic {
@@ -221,9 +221,9 @@ function RecommendContent() {
     <div className="h-[calc(100vh-140px)] flex gap-6">
       {/* Left: Tutor character panel */}
       <div className="hidden lg:flex flex-col w-64 shrink-0">
-        <div className="bg-white rounded-2xl border border-border p-5 text-center mb-4 rota-panel">
+        <div className="bg-white rounded-2xl border border-border p-5 text-center mb-4 roto-panel">
           <div className="flex justify-center mb-3">
-            <RotaAvatar size="sm" scene="welcome" />
+            <RotoAvatar size="sm" scene="welcome" />
           </div>
           <h3 className="font-bold text-text text-sm">{t("tutorTitle")}</h3>
           <p className="text-xs text-text-muted mt-1">{t("tutorStatus")}</p>
@@ -245,7 +245,7 @@ function RecommendContent() {
         </div>
 
         {/* Quick topic nav */}
-        <div className="bg-white rounded-2xl border border-border p-4 flex-1 rota-panel">
+        <div className="bg-white rounded-2xl border border-border p-4 flex-1 roto-panel">
           <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t("topicsLabel")}</h4>
           <div className="space-y-2">
             {topics.map((topic, i) => (
@@ -292,7 +292,7 @@ function RecommendContent() {
               {msg.role === "tutor" && (
                 <div className="flex gap-3">
                   <div className="shrink-0 mt-1">
-                    <RotaAvatar size="xxs" />
+                    <RotoAvatar size="xxs" />
                   </div>
                   <div className="flex-1">
                     <div className="bg-white rounded-2xl rounded-tl-md border border-border px-4 py-3 max-w-[85%]">
@@ -336,7 +336,7 @@ function RecommendContent() {
           </div>
           {(chatLoading || tutorTyping) && (
             <div className="flex gap-3">
-              <div className="shrink-0 mt-1"><RotaAvatar size="xxs" /></div>
+              <div className="shrink-0 mt-1"><RotoAvatar size="xxs" /></div>
               <div className="bg-white rounded-2xl rounded-tl-md border border-border px-4 py-3">
                 <div className="flex gap-1.5">
                   <span className="w-2 h-2 bg-accent/40 rounded-full animate-bounce" />

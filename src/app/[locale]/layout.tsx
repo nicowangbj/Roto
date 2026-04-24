@@ -12,8 +12,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Rota",
-  description: "Rota AI Research Mentor - Clarity from chaos, one step at a time",
+  title: "Roto",
+  description: "Roto AI Research Mentor - Clarity from chaos, one step at a time",
 };
 
 export function generateStaticParams() {

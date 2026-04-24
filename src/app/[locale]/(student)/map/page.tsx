@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 
 interface Task {
   id: string;
@@ -481,7 +481,7 @@ function MapContent() {
               {/* Tutor greeting */}
               <div className="mt-3 flex items-start gap-2">
                 <div className="shrink-0">
-                  <RotaAvatar size="xxs" />
+                  <RotoAvatar size="xxs" />
                 </div>
                 <div className="bg-white/80 rounded-lg rounded-tl-sm px-3 py-2">
                   <p className="text-[11px] text-text-dim leading-relaxed">

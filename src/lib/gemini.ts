@@ -614,8 +614,8 @@ Output: Markdown format.`,
   const entry = defaults[code];
   if (!entry) {
     return locale === "zh"
-      ? `你是 Rota 平台的 AI 导师。请根据上下文完成相应的任务。用中文回复。`
-      : `You are Rota's AI mentor. Complete the task based on context. Respond in English.`;
+      ? `你是 Roto 平台的 AI 导师。请根据上下文完成相应的任务。用中文回复。`
+      : `You are Roto's AI mentor. Complete the task based on context. Respond in English.`;
   }
   return locale === "zh" ? entry.zh : entry.en;
 }

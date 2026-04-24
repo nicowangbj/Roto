@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import ChatWindow from "@/components/ChatWindow";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 
 interface Task {
   id: string;
@@ -194,7 +194,7 @@ function PhaseContent() {
               onClick={() => setShowChat(!showChat)}
               className="w-full flex items-center gap-3 mb-4"
             >
-              <RotaAvatar size="xxs" />
+              <RotoAvatar size="xxs" />
               <div className="text-left flex-1">
                 <p className="font-semibold text-sm text-text">{tCommon("rotaMentor")}</p>
                 <p className="text-xs text-text-dim">{t("chatTitle")}</p>

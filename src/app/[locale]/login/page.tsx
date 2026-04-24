@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="rota-grid min-h-screen flex flex-col relative overflow-hidden">
+    <div className="roto-grid min-h-screen flex flex-col relative overflow-hidden">
       <div className="glow-purple" style={{ top: "-200px", left: "-100px" }} />
       <div
         className="glow-cyan"
@@ -71,11 +71,11 @@ export default function LoginPage() {
 
       <header className="relative z-10 px-6 md:px-8 py-5 flex items-center justify-between">
         <Link href={`/${locale}`} className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-white/80 border border-border rota-panel flex items-center justify-center text-lg font-black text-brand-ink">
+          <div className="w-10 h-10 rounded-2xl bg-white/80 border border-border roto-panel flex items-center justify-center text-lg font-black text-brand-ink">
             R
           </div>
           <div>
-            <div className="text-lg font-bold tracking-tight text-brand-ink">Rota</div>
+            <div className="text-lg font-bold tracking-tight text-brand-ink">Roto</div>
             <div className="text-xs text-text-muted">AI research mentor</div>
           </div>
         </Link>
@@ -90,7 +90,7 @@ export default function LoginPage() {
       <main className="flex-1 flex items-center justify-center relative z-10 px-6 pb-10">
         <div className="w-full max-w-6xl grid lg:grid-cols-[1.02fr_0.98fr] gap-8 items-center">
           <section className="hidden lg:block">
-            <div className="rota-panel rounded-[32px] p-10 bg-gradient-to-br from-white/90 via-brand-cloud/55 to-brand-sky-soft/80">
+            <div className="roto-panel rounded-[32px] p-10 bg-gradient-to-br from-white/90 via-brand-cloud/55 to-brand-sky-soft/80">
               <div className="inline-flex rounded-full bg-purple/22 px-4 py-2 text-sm font-semibold text-brand-ink">
                 {t("welcome")}
               </div>
@@ -103,7 +103,7 @@ export default function LoginPage() {
               <p className="mt-5 text-lg text-text-dim max-w-xl">{t("subtitle")}</p>
 
               <div className="mt-8 flex items-center gap-6">
-                <RotaAvatar size="lg" scene="signin" className="shrink-0" />
+                <RotoAvatar size="lg" scene="signin" className="shrink-0" />
                 <div className="space-y-3">
                   {(["bullet1", "bullet2", "bullet3"] as const).map((key) => (
                     <div
@@ -128,11 +128,11 @@ export default function LoginPage() {
           </section>
 
           <div className="w-full max-w-md lg:ml-auto">
-            <div className="rota-panel rounded-[32px] p-8 bg-white/90">
+            <div className="roto-panel rounded-[32px] p-8 bg-white/90">
               <div className="mb-6 lg:hidden flex items-center gap-3">
-                <RotaAvatar size="sm" scene="signin" />
+                <RotoAvatar size="sm" scene="signin" />
                 <div>
-                  <div className="text-lg font-bold text-brand-ink">Rota</div>
+                  <div className="text-lg font-bold text-brand-ink">Roto</div>
                   <div className="text-sm text-text-dim">{t("rotaMobile")}</div>
                 </div>
               </div>

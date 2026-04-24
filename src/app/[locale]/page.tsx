@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
@@ -58,18 +58,18 @@ export default function Home() {
   const tags = ["tag1", "tag2", "tag3", "tag4"] as const;
 
   return (
-    <div className="rota-grid min-h-screen flex flex-col relative overflow-hidden">
+    <div className="roto-grid min-h-screen flex flex-col relative overflow-hidden">
       <div className="glow-purple" style={{ top: "-200px", left: "-100px" }} />
       <div className="glow-cyan" style={{ bottom: "-200px", right: "-100px" }} />
 
       {/* Header */}
       <header className="relative z-10 px-6 md:px-8 py-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-white/80 border border-border rota-panel flex items-center justify-center text-lg font-black text-brand-ink">
+          <div className="w-10 h-10 rounded-2xl bg-white/80 border border-border roto-panel flex items-center justify-center text-lg font-black text-brand-ink">
             R
           </div>
           <div>
-            <div className="text-lg font-bold tracking-tight">Rota</div>
+            <div className="text-lg font-bold tracking-tight">Roto</div>
             <div className="text-xs text-text-muted">{t("aiMentor")}</div>
           </div>
         </div>
@@ -114,14 +114,14 @@ export default function Home() {
               </Link>
               <a
                 href="#features"
-                className="px-8 py-3.5 bg-white/78 border border-border hover:border-accent hover:text-accent text-text-dim font-semibold rounded-2xl transition-colors rota-panel"
+                className="px-8 py-3.5 bg-white/78 border border-border hover:border-accent hover:text-accent text-text-dim font-semibold rounded-2xl transition-colors roto-panel"
               >
                 {t("ctaSecondary")}
               </a>
             </div>
             <div className="mt-6 flex flex-wrap gap-2 text-sm">
               {tags.map((key) => (
-                <span key={key} className="rounded-full border border-border bg-white/72 px-3.5 py-1.5 text-text-dim rota-panel">
+                <span key={key} className="rounded-full border border-border bg-white/72 px-3.5 py-1.5 text-text-dim roto-panel">
                   {t(key)}
                 </span>
               ))}
@@ -130,21 +130,21 @@ export default function Home() {
 
           {/* Right: IP image flush to bottom */}
           <div className="hidden lg:flex items-end justify-center w-[340px] shrink-0">
-            <RotaAvatar size="xl" scene="hero" />
+            <RotoAvatar size="xl" scene="hero" />
           </div>
         </div>
 
         {/* Info strip — 3 cards in a row, flush below hero */}
         <div className="max-w-6xl mx-auto mt-8 pb-16 grid md:grid-cols-3 gap-4">
-          <div className="rota-panel rounded-2xl bg-brand-cloud/60 border border-purple/20 px-5 py-4">
+          <div className="roto-panel rounded-2xl bg-brand-cloud/60 border border-purple/20 px-5 py-4">
             <div className="text-xs font-bold text-purple/60 uppercase tracking-widest mb-2">{t("rotaTask")}</div>
             <p className="text-sm text-brand-ink leading-relaxed">{t("rotaTaskDesc")}</p>
           </div>
-          <div className="rota-panel rounded-2xl bg-brand-sky-soft border border-accent/20 px-5 py-4">
+          <div className="roto-panel rounded-2xl bg-brand-sky-soft border border-accent/20 px-5 py-4">
             <div className="text-xs font-bold text-accent/60 uppercase tracking-widest mb-2">{t("rotaVibe")}</div>
             <p className="text-sm text-brand-ink leading-relaxed">{t("rotaVibeDesc")}</p>
           </div>
-          <div className="rota-panel rounded-2xl bg-white/85 border border-border px-5 py-4">
+          <div className="roto-panel rounded-2xl bg-white/85 border border-border px-5 py-4">
             <div className="text-[10px] font-semibold text-text-muted uppercase tracking-widest mb-2">{t("rotaSays")}</div>
             <p className="text-sm font-semibold text-brand-ink italic leading-relaxed">{t("rotaSaysQuote")}</p>
           </div>
@@ -163,7 +163,7 @@ export default function Home() {
             {features.map((feature) => (
               <div
                 key={feature.titleKey}
-                className={`rota-panel rounded-[28px] overflow-hidden border ${feature.border} transition-transform hover:-translate-y-1`}
+                className={`roto-panel rounded-[28px] overflow-hidden border ${feature.border} transition-transform hover:-translate-y-1`}
               >
                 {/* Illustration area */}
                 <div className={`bg-gradient-to-br ${feature.accent} px-6 pt-6 pb-4`}>
@@ -182,7 +182,7 @@ export default function Home() {
 
       {/* How it works */}
       <section className="relative z-10 px-6 pb-18">
-        <div className="max-w-6xl mx-auto rota-panel rounded-[32px] p-8 md:p-10 bg-gradient-to-br from-white/92 via-brand-cloud/56 to-brand-sky-soft/70">
+        <div className="max-w-6xl mx-auto roto-panel rounded-[32px] p-8 md:p-10 bg-gradient-to-br from-white/92 via-brand-cloud/56 to-brand-sky-soft/70">
           <div className="max-w-2xl">
             <h2 className="text-3xl md:text-4xl font-black text-brand-ink">{t("howTitle")}</h2>
             <p className="mt-3 text-text-dim">{t("howSubtitle")}</p>
@@ -210,7 +210,7 @@ export default function Home() {
 
       {/* CTA */}
       <section className="relative z-10 px-6 pb-20">
-        <div className="max-w-4xl mx-auto text-center rota-panel rounded-[32px] p-10 bg-gradient-to-br from-brand-sky-soft via-white to-brand-cloud/72">
+        <div className="max-w-4xl mx-auto text-center roto-panel rounded-[32px] p-10 bg-gradient-to-br from-brand-sky-soft via-white to-brand-cloud/72">
           <h2 className="text-3xl md:text-4xl font-black text-brand-ink">{t("ctaTitle")}</h2>
           <p className="mt-4 text-text-dim max-w-2xl mx-auto">{t("ctaSubtitle")}</p>
 
@@ -232,7 +232,7 @@ export default function Home() {
       </section>
 
       <footer className="relative z-10 pb-8 text-center">
-        <span className="inline-block px-4 py-1.5 bg-white/76 border border-border text-accent text-xs font-semibold rounded-full rota-panel">
+        <span className="inline-block px-4 py-1.5 bg-white/76 border border-border text-accent text-xs font-semibold rounded-full roto-panel">
           {t("footerTag")}
         </span>
       </footer>

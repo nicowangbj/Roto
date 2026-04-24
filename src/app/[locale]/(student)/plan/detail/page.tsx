@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import ChatWindow from "@/components/ChatWindow";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 
 interface Task {
   id: string;
@@ -86,7 +86,7 @@ function PlanDetailContent() {
               onClick={() => setShowChat(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-accent/10 hover:bg-accent/20 text-accent font-medium rounded-xl transition-colors text-sm"
             >
-              <RotaAvatar size="xxs" />
+              <RotoAvatar size="xxs" />
               {t("adjustBtn")}
             </button>
           )}
@@ -184,7 +184,7 @@ function PlanDetailContent() {
             {/* Chat header */}
             <div className="px-5 py-4 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <RotaAvatar size="xxs" />
+                <RotoAvatar size="xxs" />
                 <div>
                   <h3 className="text-sm font-bold text-text">{tCommon("rotaMentor")}</h3>
                   <p className="text-xs text-text-muted">{t("chatTitle")}</p>

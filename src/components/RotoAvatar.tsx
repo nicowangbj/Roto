@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-type RotaAvatarProps = {
+type RotoAvatarProps = {
   size?: "xxs" | "xs" | "sm" | "md" | "lg" | "xl";
   scene?: "default" | "hero" | "signin" | "welcome";
   className?: string;
@@ -22,11 +22,11 @@ const glowMap = {
   welcome: "bg-[radial-gradient(circle,rgba(255,216,77,0.30)_0%,transparent_70%)]",
 };
 
-export default function RotaAvatar({
+export default function RotoAvatar({
   size = "md",
   scene = "default",
   className = "",
-}: RotaAvatarProps) {
+}: RotoAvatarProps) {
   const dims = sizeMap[size];
   const glow = glowMap[scene];
 
@@ -34,15 +34,15 @@ export default function RotaAvatar({
     <div
       className={`relative flex items-center justify-center ${className}`}
       style={{ width: dims.width, height: dims.height }}
-      aria-label="Rota mascot avatar"
+      aria-label="Roto mascot avatar"
     >
       <div
         className={`absolute inset-[10%_12%_0] blur-2xl ${glow}`}
         style={{ pointerEvents: "none" }}
       />
       <Image
-        src="/rota-ip.png"
-        alt="Rota"
+        src="/roto-ip.png"
+        alt="Roto"
         width={dims.width}
         height={dims.height}
         unoptimized

@@ -39,12 +39,12 @@ export default function StudentHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-white/78 backdrop-blur-xl">
       <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
         <Link href={`/${locale}/map`} className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl border border-border bg-white/85 rota-panel flex items-center justify-center text-base font-black text-brand-ink">
+          <div className="w-10 h-10 rounded-2xl border border-border bg-white/85 roto-panel flex items-center justify-center text-base font-black text-brand-ink">
             R
           </div>
           <div>
             <div className="text-lg font-bold tracking-tight text-brand-ink">
-              Rota
+              Roto
             </div>
             <div className="text-[11px] text-text-muted">mentor mode</div>
           </div>

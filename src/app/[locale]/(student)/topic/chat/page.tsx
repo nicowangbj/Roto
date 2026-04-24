@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import ChatWindow from "@/components/ChatWindow";
-import RotaAvatar from "@/components/RotaAvatar";
+import RotoAvatar from "@/components/RotoAvatar";
 import { getTopicDraft, saveTopicDraft } from "@/lib/topic-draft";
 
 interface ChatMessage {
@@ -109,14 +109,14 @@ export default function TopicChatPage() {
     <div className="h-[calc(100vh-140px)] flex gap-6">
       {/* Left: AI tutor character + profile notes */}
       <div className="hidden lg:flex flex-col w-72 shrink-0">
-        <div className="bg-white rounded-2xl border border-border p-6 text-center mb-4 rota-panel">
+        <div className="bg-white rounded-2xl border border-border p-6 text-center mb-4 roto-panel">
           <div className="flex justify-center mb-3">
-            <RotaAvatar size="xs" className="mx-auto" />
+            <RotoAvatar size="xs" className="mx-auto" />
           </div>
           <h3 className="font-bold text-text">{t("tutorTitle")}</h3>
           <p className="text-xs text-text-muted mt-1">{t("tutorStatus")}</p>
         </div>
-        <div className="flex-1 bg-white rounded-2xl border border-border p-5 overflow-hidden rota-panel flex flex-col min-h-0">
+        <div className="flex-1 bg-white rounded-2xl border border-border p-5 overflow-hidden roto-panel flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
               {t("dialogNotes")}

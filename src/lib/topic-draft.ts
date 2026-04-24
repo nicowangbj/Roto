@@ -1,4 +1,4 @@
-const KEY = "rota_topic_draft";
+const KEY = "roto_topic_draft";
 const EXPIRE_MS = 7 * 24 * 60 * 60 * 1000;
 
 export interface TopicDraftKeyword {
