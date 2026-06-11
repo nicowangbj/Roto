@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
@@ -16,6 +16,8 @@ interface JournalEntry {
 
 export default function JournalPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const t = useTranslations("journal");
@@ -31,13 +33,14 @@ export default function JournalPage() {
 
   useEffect(() => {
     async function fetchJournal() {
-      const res = await fetch("/api/journal");
+      const url = projectId ? `/api/journal?projectId=${projectId}` : "/api/journal";
+      const res = await fetch(url);
       const data = await res.json();
       setEntries(data);
       setLoading(false);
     }
     fetchJournal();
-  }, []);
+  }, [projectId]);
 
   if (loading) {
     return (

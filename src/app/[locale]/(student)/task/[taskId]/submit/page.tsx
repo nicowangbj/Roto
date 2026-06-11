@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
@@ -16,25 +16,46 @@ function SubmitContent() {
   const searchParams = useSearchParams();
   const taskId = params.taskId as string;
   const projectId = searchParams.get("projectId");
-  const content = searchParams.get("content") || "";
+  const contentFromQuery = searchParams.get("content") || "";
   const isResubmission = searchParams.get("resubmit") === "true";
   const hintUsed = searchParams.get("hintUsed") === "true";
   const t = useTranslations("taskSubmit");
   const locale = useLocale();
+  const submittedRef = useRef(false);
 
   const [loading, setLoading] = useState(true);
   const [result, setResult] = useState<{
     grade: string;
     feedback: string;
     suggestions: string;
+    content: string;
     id: string;
   } | null>(null);
 
   useEffect(() => {
     async function submit() {
+      if (submittedRef.current) return;
+      submittedRef.current = true;
+
+      let content = contentFromQuery;
+      const stored = sessionStorage.getItem(`task-submission-${taskId}`);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as { content?: string };
+          content = parsed.content || content;
+        } catch {
+          // Keep the query-string fallback for older submission links.
+        }
+      }
+
+      if (!content.trim()) {
+        router.replace(`/${locale}/task/${taskId}?projectId=${projectId}`);
+        return;
+      }
+
       const res = await fetch("/api/submissions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-locale": locale },
         body: JSON.stringify({
           taskId,
           content,
@@ -43,11 +64,12 @@ function SubmitContent() {
         }),
       });
       const data = await res.json();
+      sessionStorage.removeItem(`task-submission-${taskId}`);
       setResult(data);
       setLoading(false);
     }
     submit();
-  }, [taskId, content, isResubmission, hintUsed]);
+  }, [taskId, contentFromQuery, isResubmission, hintUsed, locale, projectId, router]);
 
   if (loading) {
     return (
@@ -99,7 +121,7 @@ function SubmitContent() {
       {/* Submitted content */}
       <div className="bg-white rounded-2xl border border-border p-5 mb-4">
         <h3 className="text-sm font-semibold text-text-muted mb-3">{t("yourSubmission")}</h3>
-        <p className="text-sm text-text-dim whitespace-pre-wrap">{content}</p>
+        <p className="text-sm text-text-dim whitespace-pre-wrap">{result.content}</p>
       </div>
 
       {/* Feedback */}

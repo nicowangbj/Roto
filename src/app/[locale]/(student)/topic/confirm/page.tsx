@@ -10,12 +10,11 @@ function ConfirmContent() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const t = useTranslations("topicConfirm");
-  const tCommon = useTranslations("common");
 
   const draft = typeof window !== "undefined" ? getTopicDraft() : null;
   const [name, setName] = useState(searchParams.get("name") || draft?.confirmForm.name || "");
   const [field, setField] = useState(draft?.confirmForm.field || "");
-  const [description, setDescription] = useState(draft?.confirmForm.description || "");
+  const [description, setDescription] = useState(searchParams.get("description") || draft?.confirmForm.description || "");
   const [outputFormat, setOutputFormat] = useState(searchParams.get("output") || draft?.confirmForm.outputFormat || t("outputReport"));
   const [duration, setDuration] = useState(searchParams.get("duration") || draft?.confirmForm.duration || t("duration12"));
   const [weeklyHours, setWeeklyHours] = useState(draft?.confirmForm.weeklyHours || t("hours5"));
@@ -30,10 +29,14 @@ function ConfirmContent() {
   const handleConfirm = async () => {
     if (!name.trim()) return;
     setSubmitting(true);
+    const selectedReferences =
+      draft?.selectedRefs
+        .map((index) => draft.references[index]?.title)
+        .filter((title): title is string => Boolean(title)) ?? [];
 
     const res = await fetch("/api/projects", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-locale": locale },
       body: JSON.stringify({
         topicName: name,
         field,
@@ -42,6 +45,10 @@ function ConfirmContent() {
         duration,
         weeklyHours,
         selectedPath: path,
+        conversationId: draft?.conversationId,
+        userProfile: draft?.profile,
+        selectedKeywords: draft?.selectedKeywords ?? [],
+        selectedReferences,
       }),
     });
 

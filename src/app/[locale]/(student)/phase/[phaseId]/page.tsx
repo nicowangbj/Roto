@@ -36,6 +36,7 @@ function PhaseContent() {
   const searchParams = useSearchParams();
   const phaseId = params.phaseId as string;
   const projectId = searchParams.get("projectId");
+  const backTarget = searchParams.get("from") === "detail" ? "detail" : "map";
   const [phase, setPhase] = useState<Phase | null>(null);
   const [topicName, setTopicName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -77,13 +78,16 @@ function PhaseContent() {
   return (
     <div className="max-w-4xl mx-auto">
       <button
-        onClick={() => router.push(`/${locale}/map?projectId=${projectId}`)}
+        onClick={() => {
+          const path = backTarget === "detail" ? "plan/detail" : "map";
+          router.push(`/${locale}/${path}?projectId=${projectId}`);
+        }}
         className="text-text-dim hover:text-accent text-sm mb-6 inline-flex items-center gap-1 transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
-        {t("back")}
+        {backTarget === "detail" ? t("backPlan") : t("back")}
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

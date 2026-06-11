@@ -14,9 +14,18 @@ export interface TopicDraftReference {
   field: string;
 }
 
+export interface TopicDraftProfile {
+  profile: string;
+  interests: string[];
+  skills: string[];
+  timeCommitment: string;
+  preferences: string;
+}
+
 export interface TopicDraft {
   step: "chat" | "profile" | "keywords" | "references" | "recommend" | "confirm";
   conversationId: string | null;
+  profile: TopicDraftProfile | null;
   keywords: TopicDraftKeyword[];
   selectedKeywords: string[];
   references: TopicDraftReference[];
@@ -38,6 +47,7 @@ export interface TopicDraft {
 const EMPTY_DRAFT: Omit<TopicDraft, "updatedAt"> = {
   step: "chat",
   conversationId: null,
+  profile: null,
   keywords: [],
   selectedKeywords: [],
   references: [],

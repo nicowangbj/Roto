@@ -6,7 +6,8 @@ import { NextRequest, NextResponse } from "next/server";
 async function buildConversationInput(
   conversationId: string,
   locale: string,
-  supplement?: string
+  supplement?: string,
+  input?: string
 ) {
   const user = await getSessionUser();
   if (!user) {
@@ -50,9 +51,15 @@ async function buildConversationInput(
       : `\n\nSupplementary information:\n${supplement.trim()}`
     : "";
 
+  const inputBlock = input?.trim()
+    ? locale === "zh"
+      ? `\n\n当前环节输入：\n${input.trim()}`
+      : `\n\nCurrent step input:\n${input.trim()}`
+    : "";
+
   return locale === "zh"
-    ? `以下是导师与学生的完整对话记录，请严格基于这些内容生成用户画像，不要编造对话中没有体现的信息。\n\n${transcript}${supplementBlock}`
-    : `Here is the full conversation between the mentor and the student. Generate the user profile strictly based on this transcript. Do not invent information that is not supported by the conversation.\n\n${transcript}${supplementBlock}`;
+    ? `以下是导师与学生的完整对话记录。请严格基于这些内容和当前环节输入完成本次生成任务，不要编造对话或输入中没有体现的信息。\n\n${transcript}${supplementBlock}${inputBlock}`
+    : `Here is the full conversation between the mentor and the student. Complete the current generation task strictly based on this transcript and the current step input. Do not invent information that is not supported by the conversation or input.\n\n${transcript}${supplementBlock}${inputBlock}`;
 }
 
 export async function POST(req: NextRequest) {
@@ -64,7 +71,7 @@ export async function POST(req: NextRequest) {
   try {
     const resolvedInput =
       typeof conversationId === "string" && conversationId.trim().length > 0
-        ? await buildConversationInput(conversationId, locale, supplement)
+        ? await buildConversationInput(conversationId, locale, supplement, input)
         : input;
     const result = await generateWithAI(strategyCode, resolvedInput, context, locale);
     return NextResponse.json({ result });

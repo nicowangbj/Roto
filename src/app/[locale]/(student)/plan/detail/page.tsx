@@ -99,7 +99,11 @@ function PlanDetailContent() {
             const progress = phase.tasks.length > 0 ? (completedCount / phase.tasks.length) * 100 : 0;
 
             return (
-              <div key={phase.id} className="bg-white rounded-2xl border border-border overflow-hidden">
+              <button
+                key={phase.id}
+                onClick={() => router.push(`/${locale}/phase/${phase.id}?projectId=${project.id}&from=detail`)}
+                className="w-full text-left bg-white rounded-2xl border border-border overflow-hidden transition-all hover:border-accent/50 hover:shadow-md"
+              >
                 <div className="h-1" style={{ background: color }} />
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-3">
@@ -155,8 +159,12 @@ function PlanDetailContent() {
                       ))}
                     </div>
                   )}
+
+                  <div className="mt-4 text-sm font-semibold text-accent">
+                    {t("viewPhase")}
+                  </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>

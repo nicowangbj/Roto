@@ -73,12 +73,16 @@ function HintContent() {
       setLoading(false);
     }
     fetchHint();
-  }, [taskId, t]);
+  }, [taskId, t, locale]);
 
   const handleResubmit = () => {
     if (!content.trim()) return;
+    sessionStorage.setItem(
+      `task-submission-${taskId}`,
+      JSON.stringify({ content: content.trim(), files: [] })
+    );
     router.push(
-      `/${locale}/task/${taskId}/submit?projectId=${projectId}&content=${encodeURIComponent(content)}&resubmit=true&hintUsed=true`
+      `/${locale}/task/${taskId}/submit?projectId=${projectId}&resubmit=true&hintUsed=true`
     );
   };
 

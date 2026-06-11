@@ -55,8 +55,8 @@ async function main() {
     for (const stmt of statements) {
       try {
         await client.execute(stmt);
-      } catch (err: any) {
-        const msg = err?.message || String(err);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         if (msg.includes("already exists") || msg.includes("duplicate column")) {
           console.log(`  skip (exists): ${stmt.slice(0, 60)}...`);
         } else {

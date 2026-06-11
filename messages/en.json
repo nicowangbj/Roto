@@ -232,7 +232,12 @@
     "statPhases": "Phases",
     "statWeeks": "Total weeks",
     "statOutput": "Final output",
-    "viewDetail": "View full plan"
+    "viewDetail": "View full plan",
+    "coverImageSpec": "Topic cover · 80x80",
+    "defaultProjectDescription": "Your AI mentor has broken this topic into a complete research plan with stage goals and concrete tasks.",
+    "defaultDuration": "12 weeks",
+    "defaultOutput": "Research report",
+    "defaultWeeklyHours": "5 hours/week"
   },
   "planDetail": {
     "loading": "Loading plan details...",
@@ -244,11 +249,13 @@
     "phase": "Phase {n}",
     "weekRange": "Week {start}–{end}",
     "weekLabel": "Week {n}",
+    "viewPhase": "View phase details",
     "placeholder": "Tell your mentor what you'd like to change...",
     "initialMsg": "Your plan has {phases} phases. What would you like to change — timeline, task load, content, or something specific?"
   },
   "phase": {
     "back": "Back to research map",
+    "backPlan": "Back to full plan",
     "phaseLabel": "Phase {n}",
     "weekRange": "Week {start}–{end}",
     "goalLabel": "Goal",
@@ -269,6 +276,12 @@
     "submitTitle": "Submit your work",
     "submitPlaceholder": "Enter your research findings, experiment records, or report content here...",
     "submitBtn": "Submit",
+    "uploadTitle": "Upload files",
+    "uploadHint": "Attach images, PDFs, documents, datasets, or other research materials",
+    "uploading": "Uploading files...",
+    "uploadFailed": "File upload failed. Please try again.",
+    "removeFile": "Remove",
+    "attachedFilesTitle": "Attached files:",
     "chatTitle": "Ask me anytime",
     "placeholder": "What don't you understand? Ask me...",
     "initialMsg": "I see you're working on \"{taskTitle}\". What guidance do you need? I won't give you direct answers, but I'll help you think it through!",

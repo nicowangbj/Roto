@@ -69,6 +69,10 @@ function RecommendContent() {
   const conversationIdRef = useRef<string | null>(null);
   const initialStagedRef = useRef(false);
 
+  useEffect(() => {
+    conversationIdRef.current = conversationId;
+  }, [conversationId]);
+
   // Push a tutor message after showing a typing indicator for `thinkingMs`.
   const pushTutorStaged = (content: string, thinkingMs = 900) => {
     setTutorTyping(true);
@@ -116,6 +120,8 @@ function RecommendContent() {
           body: JSON.stringify({
             strategyCode: "AI-S05",
             input: `Selected keywords: ${keywords}\nResearch of interest: ${refs}`,
+            conversationId,
+            context: "Generate specific topic recommendations based on the user's conversation transcript, profile, selected keywords, and selected reference cases.",
           }),
         });
         const data = await res.json();
@@ -131,7 +137,7 @@ function RecommendContent() {
       }
     }
     fetchRecommendations();
-  }, [keywords, refs]);
+  }, [keywords, refs, conversationId, locale]);
 
   const handleSend = async () => {
     if (!inputText.trim() || chatLoading) return;
@@ -148,19 +154,12 @@ function RecommendContent() {
         `#${i + 1} ${t.name}: ${t.reason}`
       ).join("\n");
 
-      const apiMessages = updatedMessages
-        .filter((m) => m.role !== "system")
-        .map((m) => ({
-          role: m.role === "tutor" ? "assistant" : "user",
-          content: m.content,
-        }));
-
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-locale": locale },
         body: JSON.stringify({
           strategyCode: "AI-S05",
-          messages: apiMessages,
+          message: userMsg,
           context: topicContext,
           conversationId: conversationIdRef.current,
         }),
@@ -206,14 +205,29 @@ function RecommendContent() {
   const topicListRender = useMemo(() => topics, [topics]);
 
   const handleSelectTopic = (topic: Topic) => {
+    const description = [
+      topic.reason,
+      topic.researchPoints.length > 0
+        ? `${locale === "zh" ? "研究要点" : "Research points"}: ${topic.researchPoints.join(", ")}`
+        : "",
+    ].filter(Boolean).join("\n");
+
     saveTopicDraft({
       step: "confirm",
       topicName: topic.name,
       topicOutput: topic.outputFormat,
       topicDuration: topic.estimatedDuration,
+      confirmForm: {
+        name: topic.name,
+        field: "",
+        description,
+        outputFormat: topic.outputFormat,
+        duration: topic.estimatedDuration,
+        weeklyHours: "",
+      },
     });
     router.push(
-      `/${locale}/topic/confirm?name=${encodeURIComponent(topic.name)}&output=${encodeURIComponent(topic.outputFormat)}&duration=${encodeURIComponent(topic.estimatedDuration)}`
+      `/${locale}/topic/confirm?name=${encodeURIComponent(topic.name)}&output=${encodeURIComponent(topic.outputFormat)}&duration=${encodeURIComponent(topic.estimatedDuration)}&description=${encodeURIComponent(description)}`
     );
   };
 

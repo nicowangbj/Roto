@@ -4,7 +4,6 @@ import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
-import RotoAvatar from "@/components/RotoAvatar";
 
 interface Phase {
   id: string;
@@ -20,15 +19,34 @@ interface Phase {
 interface Project {
   id: string;
   title: string;
-  topic: { name: string; description: string | null; field: string | null } | null;
-  duration: string | null;
-  outputFormat: string | null;
-  weeklyHours: string | null;
+  topic: {
+    name: string;
+    description: string | null;
+    field: string | null;
+    outputFormat: string | null;
+    duration: string | null;
+    weeklyHours: string | null;
+  } | null;
   phases: Phase[];
 }
 
 const PHASE_COLORS = ["#6366f1", "#06b6d4", "#22c55e", "#f59e0b", "#f43f5e", "#a855f7"];
 const PHASE_ICONS = ["📖", "🔍", "🧪", "📊", "✍️", "🎯"];
+
+function formatForLocale(value: string | null | undefined, locale: string): string | null {
+  if (!value) return null;
+  if (locale !== "en") return value;
+
+  return value
+    .replace(/研究报告/g, "Research report")
+    .replace(/研究论文/g, "Research paper")
+    .replace(/实验报告/g, "Experimental report")
+    .replace(/调查报告/g, "Survey report")
+    .replace(/报告/g, "Report")
+    .replace(/每周\s*(\d+)\s*小时/g, "$1 hours/week")
+    .replace(/(\d+)\s*小时/g, "$1 hours")
+    .replace(/(\d+)\s*周/g, "$1 weeks");
+}
 
 function OverviewContent() {
   const router = useRouter();
@@ -66,6 +84,12 @@ function OverviewContent() {
   const totalWeeks = project.phases.length > 0
     ? Math.max(...project.phases.map((p) => p.endWeek || 0))
     : 0;
+  const outputFormat =
+    formatForLocale(project.topic?.outputFormat, locale) || t("defaultOutput");
+  const weeklyHours =
+    formatForLocale(project.topic?.weeklyHours, locale) || t("defaultWeeklyHours");
+  const duration =
+    formatForLocale(project.topic?.duration, locale) || t("defaultDuration");
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -76,12 +100,12 @@ function OverviewContent() {
           <div className="flex items-start gap-5">
             <div className="img-placeholder shrink-0" style={{ width: 80, height: 80, borderRadius: "16px" }}>
               <span className="icon">🔬</span>
-              <span className="spec">课题封面图 · 80x80</span>
+              <span className="spec">{t("coverImageSpec")}</span>
             </div>
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-text mb-2">{project.topic?.name || project.title}</h1>
               <p className="text-sm text-text-dim leading-relaxed mb-4">
-                {project.topic?.description || "AI 导师已为你的课题拆解了完整的研究计划，包含各阶段目标和具体任务。"}
+                {project.topic?.description || t("defaultProjectDescription")}
               </p>
               <div className="flex flex-wrap gap-3">
                 {project.topic?.field && (
@@ -90,13 +114,13 @@ function OverviewContent() {
                   </span>
                 )}
                 <span className="px-3 py-1 bg-accent/10 text-accent text-xs font-medium rounded-full">
-                  {totalWeeks > 0 ? `${totalWeeks} ${t("weeks")}` : project.duration || "12 周"}
+                  {totalWeeks > 0 ? `${totalWeeks} ${t("weeks")}` : duration}
                 </span>
                 <span className="px-3 py-1 bg-cyan/10 text-cyan text-xs font-medium rounded-full">
-                  {project.outputFormat || "研究报告"}
+                  {outputFormat}
                 </span>
                 <span className="px-3 py-1 bg-amber/10 text-amber text-xs font-medium rounded-full">
-                  {project.weeklyHours || "每周5小时"}
+                  {weeklyHours}
                 </span>
               </div>
             </div>
@@ -164,7 +188,7 @@ function OverviewContent() {
           <p className="text-xs text-text-muted mt-1">{t("statWeeks")}</p>
         </div>
         <div className="stat-card p-4 rounded-xl text-center">
-          <p className="text-2xl font-bold text-green">{project.outputFormat || "报告"}</p>
+          <p className="text-2xl font-bold text-green">{outputFormat}</p>
           <p className="text-xs text-text-muted mt-1">{t("statOutput")}</p>
         </div>
       </div>
@@ -180,8 +204,9 @@ function OverviewContent() {
 }
 
 export default function PlanOverviewPage() {
+  const tCommon = useTranslations("common");
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="text-text-dim">加载中...</div></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="text-text-dim">{tCommon("loading")}</div></div>}>
       <OverviewContent />
     </Suspense>
   );

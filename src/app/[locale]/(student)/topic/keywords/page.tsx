@@ -94,7 +94,6 @@ function KeywordsContent() {
   const searchParams = useSearchParams();
   const conversationId = searchParams.get("conversationId");
   const t = useTranslations("topicKeywords");
-  const tCommon = useTranslations("common");
   const [loading, setLoading] = useState(false);
   const [keywords, setKeywords] = useState<Keyword[]>(DEFAULT_KEYWORDS);
   const [selected, setSelected] = useState<Set<string>>(new Set());

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
@@ -16,6 +16,13 @@ interface TaskData {
   phase: { name: string; project: { id: string; topic: { name: string } | null } };
 }
 
+interface UploadedFile {
+  filename: string;
+  originalName: string;
+  size: number;
+  path: string;
+}
+
 function TaskContent() {
   const params = useParams();
   const router = useRouter();
@@ -27,6 +34,9 @@ function TaskContent() {
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const [content, setContent] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("task");
   const tCommon = useTranslations("common");
 
@@ -61,10 +71,64 @@ function TaskContent() {
 
   if (!task) return <div className="text-center py-20 text-text-dim">{t("notFound")}</div>;
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(
+        files.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
+          if (!res.ok) throw new Error("Upload failed");
+          return res.json() as Promise<UploadedFile>;
+        })
+      );
+      setUploadedFiles((prev) => [...prev, ...uploaded]);
+    } catch {
+      alert(t("uploadFailed"));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const buildSubmissionContent = () => {
+    const fileInfo = uploadedFiles
+      .map((file, index) => `${index + 1}. ${file.originalName} (${formatFileSize(file.size)}) - ${file.path}`)
+      .join("\n");
+    return [
+      content.trim(),
+      fileInfo ? `${t("attachedFilesTitle")}\n${fileInfo}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+  };
+
   const handleSubmit = async () => {
-    if (!content.trim()) return;
+    const submissionContent = buildSubmissionContent();
+    if (!submissionContent.trim()) return;
+    sessionStorage.setItem(
+      `task-submission-${taskId}`,
+      JSON.stringify({ content: submissionContent, files: uploadedFiles })
+    );
     router.push(
-      `/${locale}/task/${taskId}/submit?projectId=${projectId}&content=${encodeURIComponent(content)}`
+      `/${locale}/task/${taskId}/submit?projectId=${projectId}`
     );
   };
 
@@ -118,9 +182,57 @@ function TaskContent() {
               className="w-full px-4 py-3 bg-surface2 border border-border rounded-xl text-sm text-text placeholder-text-muted font-mono resize-y focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-colors"
               placeholder={t("submitPlaceholder")}
             />
+
+            <div className="mt-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+                className="w-full rounded-2xl border-2 border-dashed border-accent/30 bg-accent/5 p-4 text-left transition-all hover:border-accent hover:bg-accent/10 disabled:opacity-60"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-lg shadow-sm">📎</div>
+                  <div>
+                    <p className="text-sm font-semibold text-text">
+                      {uploading ? t("uploading") : t("uploadTitle")}
+                    </p>
+                    <p className="text-xs text-text-dim">{t("uploadHint")}</p>
+                  </div>
+                </div>
+              </button>
+
+              {uploadedFiles.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={`${file.filename}-${index}`} className="flex items-center gap-3 rounded-xl bg-surface2 px-3 py-2">
+                      <span className="text-sm">📄</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-text">{file.originalName}</p>
+                        <p className="text-xs text-text-muted">{formatFileSize(file.size)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="text-xs font-medium text-text-muted hover:text-rose"
+                      >
+                        {t("removeFile")}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <button
               onClick={handleSubmit}
-              disabled={!content.trim()}
+              disabled={!content.trim() && uploadedFiles.length === 0}
               className="mt-4 px-8 py-3 bg-green hover:bg-green/90 text-white font-semibold rounded-xl disabled:opacity-40 transition-colors shadow-lg shadow-green/20"
             >
               {t("submitBtn")}

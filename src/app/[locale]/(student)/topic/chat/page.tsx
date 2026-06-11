@@ -44,7 +44,7 @@ export default function TopicChatPage() {
       keywords: `/${locale}/topic/keywords?conversationId=${cid}`,
       references: `/${locale}/topic/references?keywords=${kw}&conversationId=${cid}`,
       recommend: `/${locale}/topic/recommend?keywords=${kw}&refs=${rf}&conversationId=${cid}`,
-      confirm: `/${locale}/topic/confirm?name=${encodeURIComponent(draft.topicName)}&output=${encodeURIComponent(draft.topicOutput)}&duration=${encodeURIComponent(draft.topicDuration)}`,
+      confirm: `/${locale}/topic/confirm?name=${encodeURIComponent(draft.confirmForm.name || draft.topicName)}&output=${encodeURIComponent(draft.confirmForm.outputFormat || draft.topicOutput)}&duration=${encodeURIComponent(draft.confirmForm.duration || draft.topicDuration)}&description=${encodeURIComponent(draft.confirmForm.description)}`,
     };
     const url = urls[draft.step];
     if (url) router.replace(url);

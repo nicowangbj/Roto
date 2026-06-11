@@ -253,13 +253,13 @@ function MentorIllustration() {
       </div>
       <div className="flex items-end gap-2 justify-end">
         <div className="bg-purple/15 rounded-2xl rounded-br-sm px-3 py-2 text-xs text-brand-ink max-w-[75%]">
-          I don't know where to start...
+          I don&apos;t know where to start...
         </div>
       </div>
       <div className="flex items-end gap-2">
         <div className="w-6 h-6 rounded-full bg-purple/30 flex items-center justify-center text-[10px] shrink-0">R</div>
         <div className="bg-white/90 rounded-2xl rounded-bl-sm px-3 py-2 text-xs text-text-dim shadow-sm max-w-[80%]">
-          Let's break it down — tell me one thing you do know.
+          Let&apos;s break it down — tell me one thing you do know.
         </div>
       </div>
     </div>

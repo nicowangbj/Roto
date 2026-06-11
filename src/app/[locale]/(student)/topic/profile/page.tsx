@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useCallback, useEffect, useState, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
+import { saveTopicDraft } from "@/lib/topic-draft";
 
 interface UploadedFile {
   filename: string;
@@ -42,10 +43,10 @@ function ProfileContent() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function normalizeProfileReport(
+  const normalizeProfileReport = useCallback((
     parsed: Record<string, unknown>,
     fallbackText: string
-  ): ProfileReport {
+  ): ProfileReport => {
     const summary =
       typeof parsed.profile === "string"
         ? parsed.profile
@@ -84,7 +85,7 @@ function ProfileContent() {
       timeCommitment: timeParts.join(" · ") || t("defaultTime"),
       preferences: preferenceParts.join(" · ") || t("defaultPreference"),
     };
-  }
+  }, [locale, t]);
 
   useEffect(() => {
     if (!conversationId) return;
@@ -104,7 +105,9 @@ function ProfileContent() {
         const jsonMatch = data.result?.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          setProfile(normalizeProfileReport(parsed, data.result));
+          const normalized = normalizeProfileReport(parsed, data.result);
+          setProfile(normalized);
+          saveTopicDraft({ conversationId, profile: normalized });
         }
       } catch {
         // keep default profile
@@ -112,7 +115,7 @@ function ProfileContent() {
       setLoading(false);
     }
     generateProfile();
-  }, [conversationId]);
+  }, [conversationId, locale, normalizeProfileReport]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -197,7 +200,9 @@ function ProfileContent() {
         const jsonMatch = data.result.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          setProfile(normalizeProfileReport(parsed, data.result));
+          const normalized = normalizeProfileReport(parsed, data.result);
+          setProfile(normalized);
+          saveTopicDraft({ conversationId, profile: normalized });
         }
       } catch {
         // keep existing profile
@@ -214,6 +219,13 @@ function ProfileContent() {
   const nextUrl = conversationId
     ? `/${locale}/topic/keywords?conversationId=${conversationId}`
     : `/${locale}/topic/keywords`;
+
+  const handleConfirmProfile = () => {
+    if (profile) {
+      saveTopicDraft({ step: "keywords", conversationId, profile });
+    }
+    router.push(nextUrl);
+  };
 
   if (loading) {
     return (
@@ -407,7 +419,7 @@ function ProfileContent() {
 
       <div className="flex gap-4 mt-8">
         <button
-          onClick={() => router.push(nextUrl)}
+          onClick={handleConfirmProfile}
           className="flex-1 py-3.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-accent/20"
         >
           {t("confirm")}

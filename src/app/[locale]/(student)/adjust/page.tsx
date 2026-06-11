@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import ChatWindow from "@/components/ChatWindow";
@@ -15,6 +15,8 @@ interface Project {
 
 export default function AdjustPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"select" | "chat">("select");
@@ -25,11 +27,11 @@ export default function AdjustPage() {
     async function fetchProject() {
       const res = await fetch("/api/projects");
       const projects = await res.json();
-      setProject(projects[0] || null);
+      setProject(projects.find((item: Project) => item.id === projectId) || projects[0] || null);
       setLoading(false);
     }
     fetchProject();
-  }, []);
+  }, [projectId]);
 
   if (loading) {
     return (

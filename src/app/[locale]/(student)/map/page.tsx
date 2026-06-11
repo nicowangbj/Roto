@@ -149,10 +149,7 @@ function MapContent() {
 
   const handlePhaseClick = (phase: Phase) => {
     setSelectedPhase(phase.id);
-
-    if (phase.status !== "locked") {
-      router.push(`/${locale}/phase/${phase.id}?projectId=${project.id}`);
-    }
+    router.push(`/${locale}/phase/${phase.id}?projectId=${project.id}`);
   };
 
   if (loading) {
@@ -303,7 +300,7 @@ function MapContent() {
                         isSelected
                           ? "bg-white shadow-lg"
                           : isLocked
-                          ? "bg-surface2/50 cursor-default"
+                          ? "bg-surface2/50 hover:shadow-sm cursor-pointer"
                           : "bg-white hover:shadow-md cursor-pointer"
                       }`}
                       style={{
@@ -620,17 +617,15 @@ function MapContent() {
               </div>
 
               {/* Enter phase button */}
-              {selectedPhaseData.status !== "locked" && (
-                <button
-                  onClick={() => router.push(`/${locale}/phase/${selectedPhaseData.id}?projectId=${project.id}`)}
-                  className="w-full mt-4 py-2.5 text-sm font-semibold rounded-xl transition-colors text-white"
-                  style={{
-                    background: PHASE_THEMES[project.phases.indexOf(selectedPhaseData) % PHASE_THEMES.length].main,
-                  }}
-                >
-                  {t("enterPhase")}
-                </button>
-              )}
+              <button
+                onClick={() => router.push(`/${locale}/phase/${selectedPhaseData.id}?projectId=${project.id}`)}
+                className="w-full mt-4 py-2.5 text-sm font-semibold rounded-xl transition-colors text-white"
+                style={{
+                  background: PHASE_THEMES[project.phases.indexOf(selectedPhaseData) % PHASE_THEMES.length].main,
+                }}
+              >
+                {t("enterPhase")}
+              </button>
             </div>
           </div>
         )}

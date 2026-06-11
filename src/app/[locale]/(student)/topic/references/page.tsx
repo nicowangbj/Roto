@@ -21,6 +21,21 @@ const DEFAULT_REFERENCES: Reference[] = [
   { title: "校园植物多样性调查", description: "记录和分析校园内植物种类及其生态功能", difficulty: "入门", field: "生物学" },
 ];
 
+function getMatchingDraft(
+  conversationId: string | null,
+  keywords: string
+) {
+  const draft = getTopicDraft();
+  if (
+    draft?.references?.length &&
+    draft.conversationId === conversationId &&
+    draft.selectedKeywords.join(",") === keywords
+  ) {
+    return draft;
+  }
+  return null;
+}
+
 function ReferencesContent() {
   const router = useRouter();
   const locale = useLocale();
@@ -28,10 +43,13 @@ function ReferencesContent() {
   const keywords = searchParams.get("keywords") || "";
   const conversationId = searchParams.get("conversationId");
   const t = useTranslations("topicReferences");
-  const tCommon = useTranslations("common");
   const [loading, setLoading] = useState(false);
-  const [references, setReferences] = useState<Reference[]>(DEFAULT_REFERENCES);
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [references, setReferences] = useState<Reference[]>(
+    () => getMatchingDraft(conversationId, keywords)?.references ?? DEFAULT_REFERENCES
+  );
+  const [selected, setSelected] = useState<Set<number>>(
+    () => new Set(getMatchingDraft(conversationId, keywords)?.selectedRefs ?? [])
+  );
 
   const DIFFICULTY_LABELS: Record<string, string> = {
     "入门": t("diffBeginner"),
@@ -52,14 +70,9 @@ function ReferencesContent() {
     ? `/${locale}/topic/keywords?conversationId=${conversationId}`
     : `/${locale}/topic/keywords`;
 
-  // Restore from draft on mount.
+  // Fetch fresh references when there is no matching draft for this conversation.
   useEffect(() => {
-    const draft = getTopicDraft();
-    if (draft?.references?.length) {
-      setReferences(draft.references);
-      setSelected(new Set(draft.selectedRefs));
-      return;
-    }
+    if (getMatchingDraft(conversationId, keywords)) return;
     if (!keywords) return;
     async function fetchReferences() {
       setLoading(true);
@@ -70,6 +83,8 @@ function ReferencesContent() {
           body: JSON.stringify({
             strategyCode: "AI-S04",
             input: `Selected keywords: ${keywords}`,
+            conversationId,
+            context: "Generate reference research cases based on the user's conversation transcript, profile, and selected keywords.",
           }),
         });
         const data = await res.json();
@@ -78,7 +93,7 @@ function ReferencesContent() {
           const parsed = JSON.parse(jsonMatch[0]);
           if (Array.isArray(parsed.references) && parsed.references.length > 0) {
             setReferences(parsed.references);
-            saveTopicDraft({ references: parsed.references });
+            saveTopicDraft({ conversationId, references: parsed.references });
           }
         }
       } catch {
@@ -87,8 +102,7 @@ function ReferencesContent() {
       setLoading(false);
     }
     fetchReferences();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [keywords]);
+  }, [keywords, conversationId, locale]);
 
   const toggle = (index: number) => {
     const next = new Set(selected);

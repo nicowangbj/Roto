@@ -232,7 +232,12 @@
     "statPhases": "研究阶段",
     "statWeeks": "总计周数",
     "statOutput": "最终产出",
-    "viewDetail": "查看详细计划"
+    "viewDetail": "查看详细计划",
+    "coverImageSpec": "课题封面图 · 80x80",
+    "defaultProjectDescription": "AI 导师已为你的课题拆解了完整的研究计划，包含各阶段目标和具体任务。",
+    "defaultDuration": "12 周",
+    "defaultOutput": "研究报告",
+    "defaultWeeklyHours": "每周 5 小时"
   },
   "planDetail": {
     "loading": "加载计划详情...",
@@ -244,11 +249,13 @@
     "phase": "阶段 {n}",
     "weekRange": "第 {start}-{end} 周",
     "weekLabel": "第{n}周",
+    "viewPhase": "查看阶段详情",
     "placeholder": "告诉导师你想修改的内容...",
     "initialMsg": "我看到了你的研究计划，一共 {phases} 个阶段。\n\n你可以告诉我想要怎么调整，比如：\n• 某个阶段的任务太多/太少\n• 想调整时间安排\n• 想增减某个阶段的内容\n• 对某个任务有疑问\n\n我会帮你优化计划！"
   },
   "phase": {
     "back": "返回科研地图",
+    "backPlan": "返回总计划",
     "phaseLabel": "阶段 {n}",
     "weekRange": "第 {start}-{end} 周",
     "goalLabel": "目标",
@@ -269,6 +276,12 @@
     "submitTitle": "提交你的产出",
     "submitPlaceholder": "在这里输入你的研究成果、实验记录或报告内容...",
     "submitBtn": "提交产出",
+    "uploadTitle": "上传文件",
+    "uploadHint": "可提交图片、PDF、文档、数据表或其他研究材料",
+    "uploading": "文件上传中...",
+    "uploadFailed": "文件上传失败，请重试",
+    "removeFile": "移除",
+    "attachedFilesTitle": "已上传文件：",
     "chatTitle": "有问题随时问我",
     "placeholder": "有什么不懂的，问我...",
     "initialMsg": "我看到你正在做「{taskTitle}」这个任务。有什么需要我帮忙引导的吗？记住，我不会直接给你答案，但我会帮你理清思路！",
