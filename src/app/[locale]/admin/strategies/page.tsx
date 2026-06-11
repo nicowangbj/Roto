@@ -36,7 +36,7 @@ export default function StrategiesPage() {
   };
 
   useEffect(() => {
-    fetch("/api/strategies")
+    fetch("/api/strategies", { cache: "no-store" })
       .then((r) => r.json())
       .then(setStrategies);
   }, []);

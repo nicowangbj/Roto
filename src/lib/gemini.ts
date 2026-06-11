@@ -609,6 +609,33 @@ Output: Markdown format.`,
 
 Output: Markdown format.`,
     },
+
+    "AI-S25": {
+      zh: `你在帮一位科研导师把学生的自述内容压成 3-5 条"画像要点"。每条要点应该是对学生兴趣、能力、时间或研究偏好的概括判断，而不是学生原话。
+
+要求：
+- 每条 one sentence，最多 30 字，描述性、具体
+- 尽量覆盖不同维度（兴趣方向 / 已有技能 / 时间精力 / 研究偏好 / 动机）
+- 内容不足以判断时，就少返回几条，宁缺毋滥
+- 不要使用"学生说"之类引述句式，直接写结论
+
+只返回 JSON，不要其他文字：
+{"notes":[{"category":"兴趣","summary":"对人工智能和心理学交叉领域感兴趣"}]}
+
+category 从以下选一个：兴趣 / 技能 / 时间 / 偏好 / 动机`,
+      en: `You help a research mentor compress a student's self-description into 3-5 "profile notes". Each note is a descriptive takeaway about the student's interests, skills, schedule, or research preferences — not a direct quote.
+
+Rules:
+- One short sentence each (max ~18 words), specific and descriptive
+- Try to cover different dimensions (Interest / Skills / Time / Preference / Motivation)
+- Return fewer notes rather than guessing — skip dimensions without enough evidence
+- Don't write "The student says..." — just state the takeaway
+
+Return ONLY JSON, no other text:
+{"notes":[{"category":"Interest","summary":"Drawn to the intersection of AI and psychology"}]}
+
+category must be one of: Interest / Skills / Time / Preference / Motivation`,
+    },
   };
 
   const entry = defaults[code];

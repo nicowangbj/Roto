@@ -856,18 +856,65 @@ const strategies = [
 - 项目完结日志要有仪式感，让学生感到成就
 - 第一人称，像写给未来自己的信`,
   },
+  {
+    code: "AI-S25",
+    name: "对话画像要点生成策略",
+    module: "topic_selection",
+    strategyType: "generation",
+    description: "将学生在选题对话中的自述压缩为3-5条画像要点",
+    triggerTiming: "选题对话中实时生成学生画像要点时",
+    promptTemplate: `你在帮一位科研导师把学生的自述内容压成 3-5 条"画像要点"。每条要点应该是对学生兴趣、能力、时间或研究偏好的概括判断，而不是学生原话。
+
+## 要求
+- 每条 one sentence，最多 30 字，描述性、具体
+- 尽量覆盖不同维度（兴趣方向 / 已有技能 / 时间精力 / 研究偏好 / 动机）
+- 内容不足以判断时，就少返回几条，宁缺毋滥
+- 不要使用"学生说"之类引述句式，直接写结论
+
+## 输入
+- 学生在对话中说过的内容，按时间顺序排列
+
+## 输出格式（JSON）
+{
+  "notes": [
+    {
+      "category": "兴趣",
+      "summary": "对人工智能和心理学交叉领域感兴趣"
+    }
+  ]
+}
+
+## 字段要求
+- category 从以下选一个：兴趣 / 技能 / 时间 / 偏好 / 动机
+- summary 必须简短、具体、可直接展示在学生画像区域`,
+  },
 ];
 
 async function main() {
   console.log("Seeding AI strategies...");
 
   for (const strategy of strategies) {
+    const existing = await prisma.aIStrategy.findUnique({
+      where: { code: strategy.code },
+    });
+
+    if (existing) {
+      await prisma.aIStrategy.update({
+        where: { code: strategy.code },
+        data: {
+          name: strategy.name,
+          module: strategy.module,
+          strategyType: strategy.strategyType,
+          description: strategy.description,
+          triggerTiming: strategy.triggerTiming,
+        },
+      });
+      continue;
+    }
+
     await prisma.aIStrategy.upsert({
       where: { code: strategy.code },
-      update: {
-        ...strategy,
-        isConfigured: !!strategy.promptTemplate?.trim(),
-      },
+      update: {},
       create: {
         ...strategy,
         promptTemplate: strategy.promptTemplate || "",

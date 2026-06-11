@@ -1,12 +1,30 @@
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { notFound, redirect } from "next/navigation";
+import { isAdminEmail, isAdminEnabled } from "@/lib/admin";
+import { getSessionUser } from "@/lib/session-user";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: Promise<{ locale: string }>;
 }) {
-  const t = useTranslations("admin");
+  const { locale } = await params;
+  if (!isAdminEnabled()) {
+    notFound();
+  }
+
+  const user = await getSessionUser();
+  if (!user) {
+    redirect(`/${locale}/login?next=/${locale}/admin/strategies`);
+  }
+  if (!isAdminEmail(user.email)) {
+    notFound();
+  }
+
+  const t = await getTranslations("admin");
 
   return (
     <div className="min-h-screen bg-bg">

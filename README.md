@@ -34,6 +34,15 @@ GEMINI_API_KEY=""
 
 # 应用名称
 NEXT_PUBLIC_APP_NAME="研途 ResearchFlow"
+
+# Prompt 配置后台（默认关闭，C 端产品不要开启）
+ENABLE_ADMIN="false"
+
+# 仅 Admin 独立部署时开启：开启后非后台页面会跳转到后台
+ADMIN_ONLY="false"
+
+# 允许访问 Prompt 配置后台的管理员邮箱，多个邮箱用英文逗号分隔
+ADMIN_EMAILS="your-admin@example.com"
 ```
 
 ### 4. 初始化数据库
@@ -60,6 +69,38 @@ npm run dev
 
 - **邮箱**: `demo@researchflow.com`
 - **密码**: `demo123`
+
+## Prompt 配置后台部署
+
+Prompt 配置后台用于维护 `/admin/strategies` 中的 AI 策略，不应暴露在 C 端产品部署中。推荐使用同一个 GitHub 仓库创建两个 Vercel Project，并让它们连接同一套数据库。
+
+### C 端产品部署
+
+面向学生用户，只读取数据库中的 prompt，不开放后台页面和策略配置 API。
+
+```bash
+ENABLE_ADMIN="false"
+ADMIN_ONLY="false"
+ADMIN_EMAILS=""
+```
+
+### Admin 后台部署
+
+只给管理员配置 prompt 使用，保存后写入同一张 `AIStrategy` 表，C 端下一次 AI 调用会读取最新配置。
+
+```bash
+ENABLE_ADMIN="true"
+ADMIN_ONLY="true"
+ADMIN_EMAILS="admin1@example.com,admin2@example.com"
+```
+
+Admin 后台入口：
+
+```text
+/admin/strategies
+```
+
+注意：线上新增策略（例如 `AI-S25`）时，可以执行一次 seed。seed 只会创建缺失策略和更新策略元信息，不会覆盖已经在后台手动调整过的 `promptTemplate`。
 
 ## 技术栈
 

@@ -11,6 +11,18 @@ interface Keyword {
   category: string;
 }
 
+interface StrategyKeyword {
+  word?: unknown;
+  label?: unknown;
+  description?: unknown;
+  category?: unknown;
+}
+
+interface StrategyCategory {
+  name?: unknown;
+  keywords?: unknown;
+}
+
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   "Technology": { bg: "bg-accent/10", text: "text-accent", border: "border-accent/20" },
   "Natural Science": { bg: "bg-green/10", text: "text-green", border: "border-green/20" },
@@ -36,6 +48,46 @@ const DEFAULT_KEYWORDS: Keyword[] = [
   { word: "文学分析", description: "作品与文化研究", category: "Humanities" },
 ];
 
+function normalizeKeyword(raw: StrategyKeyword, fallbackCategory = "Technology"): Keyword | null {
+  const word = typeof raw.word === "string"
+    ? raw.word
+    : typeof raw.label === "string"
+      ? raw.label
+      : "";
+  if (!word.trim()) return null;
+
+  return {
+    word: word.trim(),
+    description: typeof raw.description === "string" ? raw.description.trim() : "",
+    category: typeof raw.category === "string" && raw.category.trim()
+      ? raw.category.trim()
+      : fallbackCategory,
+  };
+}
+
+function normalizeKeywords(parsed: Record<string, unknown>): Keyword[] {
+  if (Array.isArray(parsed.keywords)) {
+    return parsed.keywords
+      .map((item) => normalizeKeyword(item as StrategyKeyword))
+      .filter((item): item is Keyword => item !== null);
+  }
+
+  if (Array.isArray(parsed.categories)) {
+    return parsed.categories.flatMap((category) => {
+      const cat = category as StrategyCategory;
+      const name = typeof cat.name === "string" && cat.name.trim()
+        ? cat.name.trim()
+        : "Technology";
+      if (!Array.isArray(cat.keywords)) return [];
+      return cat.keywords
+        .map((item) => normalizeKeyword(item as StrategyKeyword, name))
+        .filter((item): item is Keyword => item !== null);
+    });
+  }
+
+  return [];
+}
+
 function KeywordsContent() {
   const router = useRouter();
   const locale = useLocale();
@@ -59,7 +111,11 @@ function KeywordsContent() {
   // Restore from draft on mount.
   useEffect(() => {
     const draft = getTopicDraft();
-    if (draft?.keywords?.length) {
+    if (
+      draft?.keywords?.length &&
+      draft.conversationId &&
+      draft.conversationId === conversationId
+    ) {
       setKeywords(draft.keywords);
       setSelected(new Set(draft.selectedKeywords));
       return;
@@ -73,17 +129,22 @@ function KeywordsContent() {
           headers: { "Content-Type": "application/json", "x-locale": locale },
           body: JSON.stringify({
             strategyCode: "AI-S03",
-            input: "Generate research keyword recommendations based on the user profile",
-            context: `Conversation ID: ${conversationId}`,
+            conversationId,
+            context: "Generate research keyword recommendations strictly based on the user's profile and conversation transcript.",
           }),
         });
         const data = await res.json();
         const jsonMatch = data.result?.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          if (Array.isArray(parsed.keywords) && parsed.keywords.length > 0) {
-            setKeywords(parsed.keywords);
-            saveTopicDraft({ keywords: parsed.keywords });
+          const generatedKeywords = normalizeKeywords(parsed);
+          if (generatedKeywords.length > 0) {
+            setKeywords(generatedKeywords);
+            saveTopicDraft({
+              conversationId,
+              keywords: generatedKeywords,
+              selectedKeywords: [],
+            });
           }
         }
       } catch {

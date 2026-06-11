@@ -38,7 +38,7 @@ export default function StrategyEditPage() {
   };
 
   useEffect(() => {
-    fetch(`/api/strategies/${code}`)
+    fetch(`/api/strategies/${code}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         setStrategy(data);
@@ -55,7 +55,14 @@ export default function StrategyEditPage() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ promptTemplate, description, triggerTiming }),
-    });
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        setStrategy(data);
+        setPromptTemplate(data.promptTemplate || "");
+        setDescription(data.description || "");
+        setTriggerTiming(data.triggerTiming || "");
+      });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);

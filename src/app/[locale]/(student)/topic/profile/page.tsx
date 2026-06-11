@@ -11,6 +11,14 @@ interface UploadedFile {
   description: string;
 }
 
+interface ProfileReport {
+  profile: string;
+  interests: string[];
+  skills: string[];
+  timeCommitment: string;
+  preferences: string;
+}
+
 function ProfileContent() {
   const router = useRouter();
   const locale = useLocale();
@@ -20,13 +28,7 @@ function ProfileContent() {
   const conversationId = searchParams.get("conversationId");
   const isQuickStart = searchParams.get("quickStart") === "1";
   const [loading, setLoading] = useState(false);
-  const [profile, setProfile] = useState<{
-    profile: string;
-    interests: string[];
-    skills: string[];
-    timeCommitment: string;
-    preferences: string;
-  } | null>(() => ({
+  const [profile, setProfile] = useState<ProfileReport | null>(() => ({
     profile: t("defaultProfile"),
     interests: t("defaultInterests").split(/[,，]\s*/),
     skills: t("defaultSkills").split(/[,，]\s*/),
@@ -40,6 +42,50 @@ function ProfileContent() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  function normalizeProfileReport(
+    parsed: Record<string, unknown>,
+    fallbackText: string
+  ): ProfileReport {
+    const summary =
+      typeof parsed.profile === "string"
+        ? parsed.profile
+        : typeof parsed.summary === "string"
+          ? parsed.summary
+          : typeof parsed.personality === "string"
+            ? parsed.personality
+            : fallbackText;
+
+    const weeklyHours =
+      typeof parsed.weeklyHours === "number"
+        ? `${parsed.weeklyHours} ${locale === "zh" ? "小时/周" : "hours/week"}`
+        : typeof parsed.weeklyHours === "string"
+          ? parsed.weeklyHours
+          : "";
+
+    const timeParts = [
+      typeof parsed.timeCommitment === "string" ? parsed.timeCommitment : "",
+      typeof parsed.preferredDuration === "string" ? parsed.preferredDuration : "",
+      weeklyHours,
+    ].filter(Boolean);
+
+    const preferenceParts = [
+      typeof parsed.preferences === "string" ? parsed.preferences : "",
+      typeof parsed.outputPreference === "string" ? parsed.outputPreference : "",
+    ].filter(Boolean);
+
+    return {
+      profile: summary,
+      interests: Array.isArray(parsed.interests)
+        ? parsed.interests.filter((item): item is string => typeof item === "string")
+        : [],
+      skills: Array.isArray(parsed.skills)
+        ? parsed.skills.filter((item): item is string => typeof item === "string")
+        : [],
+      timeCommitment: timeParts.join(" · ") || t("defaultTime"),
+      preferences: preferenceParts.join(" · ") || t("defaultPreference"),
+    };
+  }
+
   useEffect(() => {
     if (!conversationId) return;
     async function generateProfile() {
@@ -50,7 +96,7 @@ function ProfileContent() {
           headers: { "Content-Type": "application/json", "x-locale": locale },
           body: JSON.stringify({
             strategyCode: "AI-S02",
-            input: `Conversation ID: ${conversationId}`,
+            conversationId,
             context: `Please generate a user profile report based on the conversation`,
           }),
         });
@@ -58,13 +104,7 @@ function ProfileContent() {
         const jsonMatch = data.result?.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          setProfile({
-            profile: parsed.profile || data.result,
-            interests: Array.isArray(parsed.interests) ? parsed.interests : [],
-            skills: Array.isArray(parsed.skills) ? parsed.skills : [],
-            timeCommitment: parsed.timeCommitment || t("defaultTime"),
-            preferences: parsed.preferences || t("defaultPreference"),
-          });
+          setProfile(normalizeProfileReport(parsed, data.result));
         }
       } catch {
         // keep default profile
@@ -147,7 +187,8 @@ function ProfileContent() {
         headers: { "Content-Type": "application/json", "x-locale": locale },
         body: JSON.stringify({
           strategyCode: "AI-S02",
-          input: `Conversation ID: ${conversationId}\n\nSupplement: ${supplementContext}`,
+          conversationId,
+          supplement: supplementContext,
           context: `Please regenerate the user profile report based on the conversation and supplementary information`,
         }),
       });
@@ -156,13 +197,7 @@ function ProfileContent() {
         const jsonMatch = data.result.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          setProfile({
-            profile: parsed.profile || data.result,
-            interests: Array.isArray(parsed.interests) ? parsed.interests : [],
-            skills: Array.isArray(parsed.skills) ? parsed.skills : [],
-            timeCommitment: parsed.timeCommitment || t("defaultTime"),
-            preferences: parsed.preferences || t("defaultPreference"),
-          });
+          setProfile(normalizeProfileReport(parsed, data.result));
         }
       } catch {
         // keep existing profile

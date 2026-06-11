@@ -1,16 +1,75 @@
 import { generateWithAI } from "@/lib/gemini";
+import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/session-user";
 import { NextRequest, NextResponse } from "next/server";
+
+async function buildConversationInput(
+  conversationId: string,
+  locale: string,
+  supplement?: string
+) {
+  const user = await getSessionUser();
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  const conversation = await prisma.conversation.findFirst({
+    where: {
+      id: conversationId,
+      userId: user.id,
+    },
+    include: {
+      messages: {
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  });
+
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  const transcript = conversation.messages
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .map((message, index) => {
+      const role =
+        locale === "zh"
+          ? message.role === "user"
+            ? "学生"
+            : "导师"
+          : message.role === "user"
+            ? "Student"
+            : "Mentor";
+      return `[${index + 1}] ${role}: ${message.content}`;
+    })
+    .join("\n\n");
+
+  const supplementBlock = supplement?.trim()
+    ? locale === "zh"
+      ? `\n\n补充信息：\n${supplement.trim()}`
+      : `\n\nSupplementary information:\n${supplement.trim()}`
+    : "";
+
+  return locale === "zh"
+    ? `以下是导师与学生的完整对话记录，请严格基于这些内容生成用户画像，不要编造对话中没有体现的信息。\n\n${transcript}${supplementBlock}`
+    : `Here is the full conversation between the mentor and the student. Generate the user profile strictly based on this transcript. Do not invent information that is not supported by the conversation.\n\n${transcript}${supplementBlock}`;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { strategyCode, input, context } = body;
+  const { strategyCode, input, context, conversationId, supplement } = body;
 
   const locale = req.headers.get("x-locale") ?? "en";
 
   try {
-    const result = await generateWithAI(strategyCode, input, context, locale);
+    const resolvedInput =
+      typeof conversationId === "string" && conversationId.trim().length > 0
+        ? await buildConversationInput(conversationId, locale, supplement)
+        : input;
+    const result = await generateWithAI(strategyCode, resolvedInput, context, locale);
     return NextResponse.json({ result });
-  } catch {
+  } catch (err) {
+    console.error("Generate API error:", err);
     return NextResponse.json({
       result: JSON.stringify({
         error:

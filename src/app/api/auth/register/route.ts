@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { hashPassword, createSessionToken, setSessionCookie } from "@/lib/auth";
+import { isAdminOnlyDeployment } from "@/lib/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -7,6 +8,13 @@ export async function POST(req: NextRequest) {
   const zh = locale === "zh";
 
   try {
+    if (isAdminOnlyDeployment()) {
+      return NextResponse.json(
+        { error: zh ? "管理后台不开放注册" : "Registration is disabled for admin deployments" },
+        { status: 403 }
+      );
+    }
+
     const { name, email, password } = await req.json();
 
     if (!name || !email || !password) {

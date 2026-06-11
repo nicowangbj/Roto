@@ -53,7 +53,10 @@ export default function LoginPage() {
         return;
       }
 
-      router.push(`/${locale}/welcome`);
+      const next = new URLSearchParams(window.location.search).get("next");
+      const safeNext =
+        next && next.startsWith(`/${locale}/`) ? next : `/${locale}/welcome`;
+      router.push(safeNext);
     } catch {
       setError(tc("networkError"));
     } finally {
