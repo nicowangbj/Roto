@@ -12,11 +12,56 @@ function ConfirmContent() {
   const t = useTranslations("topicConfirm");
 
   const draft = typeof window !== "undefined" ? getTopicDraft() : null;
-  const [name, setName] = useState(searchParams.get("name") || draft?.confirmForm.name || "");
-  const [field, setField] = useState(searchParams.get("field") || draft?.confirmForm.field || "");
-  const [description, setDescription] = useState(searchParams.get("description") || draft?.confirmForm.description || "");
-  const [outputFormat, setOutputFormat] = useState(searchParams.get("output") || draft?.confirmForm.outputFormat || t("outputReport"));
-  const [duration, setDuration] = useState(searchParams.get("duration") || draft?.confirmForm.duration || t("duration12"));
+  const rawName = searchParams.get("name") || draft?.confirmForm.name || "";
+  const rawDescription = searchParams.get("description") || draft?.confirmForm.description || "";
+  const rawOutput = searchParams.get("output") || draft?.confirmForm.outputFormat || "";
+  const rawDuration = searchParams.get("duration") || draft?.confirmForm.duration || "";
+
+  const normalizeOutputFormat = (value: string) => {
+    const lower = value.toLowerCase();
+    if (locale === "zh") {
+      if (value.includes("实验")) return t("outputExperiment");
+      if (value.includes("调研") || value.includes("问卷") || value.includes("案例")) return t("outputSurvey");
+      if (value.includes("论文")) return t("outputPaper");
+      return t("outputReport");
+    }
+    if (lower.includes("experiment")) return t("outputExperiment");
+    if (lower.includes("survey") || lower.includes("case")) return t("outputSurvey");
+    if (lower.includes("paper")) return t("outputPaper");
+    return t("outputReport");
+  };
+
+  const normalizeDuration = (value: string) => {
+    const numbers = value.match(/\d+/g)?.map(Number) ?? [];
+    if (numbers.length === 0) return t("duration12");
+    const maxNumber = Math.max(...numbers);
+    const weeks = /month|月/i.test(value) ? maxNumber * 4 : maxNumber;
+    if (weeks <= 7) return t("duration6");
+    if (weeks <= 9) return t("duration8");
+    if (weeks <= 11) return t("duration10");
+    if (weeks <= 14) return t("duration12");
+    return t("duration16");
+  };
+
+  const inferResearchField = (title: string, desc: string) => {
+    const text = `${title} ${desc}`.toLowerCase();
+    if (/price|pricing|market|business|econom|bertrand|cournot|coffee|competition/.test(text)) {
+      return locale === "zh" ? "经济学" : "Economics";
+    }
+    if (/psychology|motivation|mental|心理|动机|健康/.test(text)) return locale === "zh" ? "心理学" : "Psychology";
+    if (/streaming|media|social|社交|媒体/.test(text)) return locale === "zh" ? "传媒研究" : "Media Studies";
+    if (/environment|sustainable|climate|green|环境|气候|植物/.test(text)) return locale === "zh" ? "环境科学" : "Environmental Science";
+    if (/ai|writing|education|learning|教育|学习|写作/.test(text)) return locale === "zh" ? "教育技术" : "Education Technology";
+    return locale === "zh" ? "跨学科研究" : "Interdisciplinary Research";
+  };
+
+  const [name, setName] = useState(rawName);
+  const [field, setField] = useState(
+    searchParams.get("field") || draft?.confirmForm.field || inferResearchField(rawName, rawDescription)
+  );
+  const [description, setDescription] = useState(rawDescription);
+  const [outputFormat, setOutputFormat] = useState(rawOutput ? normalizeOutputFormat(rawOutput) : t("outputReport"));
+  const [duration, setDuration] = useState(rawDuration ? normalizeDuration(rawDuration) : t("duration12"));
   const [weeklyHours, setWeeklyHours] = useState(draft?.confirmForm.weeklyHours || t("hours5"));
   const [submitting, setSubmitting] = useState(false);
   const path = searchParams.get("path") || "no_topic";
