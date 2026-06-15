@@ -18,6 +18,139 @@ interface ChatWindowProps {
   initialMessages?: Message[];
 }
 
+function splitAssistantReply(reply: string): string[] {
+  const normalized = reply.trim();
+  if (!normalized) return [];
+
+  const paragraphs = normalized
+    .split(/\n{2,}/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  const chunks: string[] = [];
+  const maxLength = 260;
+
+  for (const paragraph of paragraphs) {
+    if (paragraph.length <= maxLength) {
+      chunks.push(paragraph);
+      continue;
+    }
+
+    const sentences = paragraph.match(/[^.!?。！？]+[.!?。！？]?/g) ?? [paragraph];
+    let current = "";
+
+    for (const sentence of sentences) {
+      const trimmed = sentence.trim();
+      if (!trimmed) continue;
+
+      if (current && `${current} ${trimmed}`.length > maxLength) {
+        chunks.push(current);
+        current = trimmed;
+      } else {
+        current = current ? `${current} ${trimmed}` : trimmed;
+      }
+    }
+
+    if (current) chunks.push(current);
+  }
+
+  return chunks.length > 0 ? chunks : [normalized];
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function InlineMarkdown({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g);
+
+  return (
+    <>
+      {parts.map((part, index) => {
+        if (!part) return null;
+
+        const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        if (linkMatch) {
+          return (
+            <a
+              key={index}
+              href={linkMatch[2]}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent underline underline-offset-2"
+            >
+              {linkMatch[1]}
+            </a>
+          );
+        }
+
+        if (part.startsWith("**") && part.endsWith("**")) {
+          return <strong key={index} className="font-semibold text-text">{part.slice(2, -2)}</strong>;
+        }
+
+        if (part.startsWith("*") && part.endsWith("*")) {
+          return <em key={index} className="italic">{part.slice(1, -1)}</em>;
+        }
+
+        if (part.startsWith("`") && part.endsWith("`")) {
+          return (
+            <code key={index} className="rounded-md bg-surface2 px-1.5 py-0.5 text-[0.85em] text-text">
+              {part.slice(1, -1)}
+            </code>
+          );
+        }
+
+        return <span key={index}>{part}</span>;
+      })}
+    </>
+  );
+}
+
+function MessageContent({ content }: { content: string }) {
+  const lines = content.split("\n");
+  const elements: React.ReactNode[] = [];
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (listItems.length === 0) return;
+    elements.push(
+      <ul key={`list-${elements.length}`} className="my-2 list-disc space-y-1 pl-5">
+        {listItems.map((item, index) => (
+          <li key={index}><InlineMarkdown text={item} /></li>
+        ))}
+      </ul>
+    );
+    listItems = [];
+  };
+
+  lines.forEach((line, index) => {
+    const unordered = line.match(/^\s*[-*]\s+(.+)$/);
+    const ordered = line.match(/^\s*\d+[.)]\s+(.+)$/);
+
+    if (unordered || ordered) {
+      listItems.push((unordered?.[1] || ordered?.[1] || "").trim());
+      return;
+    }
+
+    flushList();
+
+    if (!line.trim()) {
+      elements.push(<br key={`br-${index}`} />);
+      return;
+    }
+
+    elements.push(
+      <p key={`p-${index}`} className="mb-2 last:mb-0">
+        <InlineMarkdown text={line} />
+      </p>
+    );
+  });
+
+  flushList();
+
+  return <>{elements}</>;
+}
+
 export default function ChatWindow({
   strategyCode,
   projectId,
@@ -60,9 +193,18 @@ export default function ChatWindow({
         }),
       });
       const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || "Chat request failed");
+
       setConversationId(data.conversationId);
-      const updated = [...newMessages, { role: "assistant" as const, content: data.reply }];
-      setMessages(updated);
+      const replyChunks = splitAssistantReply(String(data.reply ?? ""));
+      let updated = newMessages;
+
+      for (let i = 0; i < replyChunks.length; i += 1) {
+        if (i > 0) await wait(520);
+        updated = [...updated, { role: "assistant" as const, content: replyChunks[i] }];
+        setMessages(updated);
+      }
+
       onConversationUpdate?.(data.conversationId, updated);
     } catch {
       setMessages([
@@ -100,9 +242,9 @@ export default function ChatWindow({
                   <span className="text-xs font-semibold text-accent">{t("mentorLabel")}</span>
                 </div>
               )}
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {msg.content}
-              </p>
+              <div className="text-sm leading-relaxed">
+                <MessageContent content={msg.content} />
+              </div>
             </div>
           </div>
         ))}
