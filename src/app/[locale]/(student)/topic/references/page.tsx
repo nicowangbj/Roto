@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { getTopicDraft, saveTopicDraft } from "@/lib/topic-draft";
@@ -25,6 +25,91 @@ const DEFAULT_REFERENCES: Reference[] = [
   { title: "高中生睡眠质量与学业表现关系", description: "通过问卷和成绩数据分析两者的相关性", difficulty: "入门", field: "健康科学" },
   { title: "校园植物多样性调查", description: "记录和分析校园内植物种类及其生态功能", difficulty: "入门", field: "生物学" },
 ];
+
+const MAX_EXPANDS_PER_ROUND = 3;
+
+interface StrategyReference {
+  title?: unknown;
+  description?: unknown;
+  difficulty?: unknown;
+  field?: unknown;
+}
+
+function normalizeReference(raw: StrategyReference): Reference | null {
+  if (typeof raw.title !== "string" || !raw.title.trim()) return null;
+  return {
+    title: raw.title.trim(),
+    description: typeof raw.description === "string" ? raw.description.trim() : "",
+    difficulty: typeof raw.difficulty === "string" && raw.difficulty.trim()
+      ? raw.difficulty.trim()
+      : "Intermediate",
+    field: typeof raw.field === "string" && raw.field.trim() ? raw.field.trim() : "Research",
+  };
+}
+
+function normalizeReferences(parsed: Record<string, unknown>): Reference[] {
+  if (!Array.isArray(parsed.references)) return [];
+  return parsed.references
+    .map((item) => normalizeReference(item as StrategyReference))
+    .filter((item): item is Reference => item !== null);
+}
+
+function uniqueReferences(items: Reference[]): Reference[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = item.title.trim().toLowerCase();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function fallbackReferenceExpansion(keywords: string, locale: string, round: number): Reference[] {
+  const zh = locale === "zh";
+  const topic = keywords || (zh ? "已选方向" : "selected directions");
+  const suffix = round > 1 ? ` ${round}` : "";
+  return zh
+    ? [
+        {
+          title: `${topic} 的小规模问卷研究${suffix}`,
+          description: "围绕一个具体变量设计问卷，观察不同学生群体之间的差异。",
+          difficulty: "入门",
+          field: "调查研究",
+        },
+        {
+          title: `${topic} 的公开数据探索${suffix}`,
+          description: "寻找公开数据或可收集数据，用图表和简单统计发现可解释的模式。",
+          difficulty: "中等",
+          field: "数据分析",
+        },
+        {
+          title: `${topic} 的案例比较研究${suffix}`,
+          description: "选择两个典型案例，比较它们的背景、机制和结果差异。",
+          difficulty: "中等",
+          field: "案例研究",
+        },
+      ]
+    : [
+        {
+          title: `Small survey study on ${topic}${suffix}`,
+          description: "Design a focused survey around one variable and compare patterns across student groups.",
+          difficulty: "Beginner",
+          field: "Survey research",
+        },
+        {
+          title: `Open data exploration for ${topic}${suffix}`,
+          description: "Find public or collectable data, then use charts and simple statistics to identify explainable patterns.",
+          difficulty: "Intermediate",
+          field: "Data analysis",
+        },
+        {
+          title: `Comparative case study of ${topic}${suffix}`,
+          description: "Compare two concrete cases and analyze differences in context, mechanism, and outcome.",
+          difficulty: "Intermediate",
+          field: "Case study",
+        },
+      ];
+}
 
 function getMatchingDraft(
   conversationId: string | null,
@@ -52,15 +137,27 @@ function ReferencesContent() {
   const [references, setReferences] = useState<Reference[]>(
     () => getMatchingDraft(conversationId, keywords)?.references ?? DEFAULT_REFERENCES
   );
+  const referencesRef = useRef<Reference[]>(
+    getMatchingDraft(conversationId, keywords)?.references ?? DEFAULT_REFERENCES
+  );
   const [selected, setSelected] = useState<Set<number>>(
     () => new Set(getMatchingDraft(conversationId, keywords)?.selectedRefs ?? [])
   );
+  const [expanding, setExpanding] = useState(false);
+  const [expandCount, setExpandCount] = useState(0);
+  const [regenerating, setRegenerating] = useState(false);
+  const [regenerateOpen, setRegenerateOpen] = useState(false);
+  const [supplement, setSupplement] = useState("");
+  const [notice, setNotice] = useState("");
 
   const DIFFICULTY_LABELS: Record<string, string> = {
     "入门": t("diffBeginner"),
     "中等": t("diffIntermediate"),
     "进阶": t("diffAdvanced"),
     "Real paper": t("realPaper"),
+    "Beginner": t("diffBeginner"),
+    "Intermediate": t("diffIntermediate"),
+    "Advanced": t("diffAdvanced"),
   };
 
   const DIFFICULTY_STYLE: Record<string, string> = {
@@ -68,6 +165,9 @@ function ReferencesContent() {
     "中等": "bg-amber/10 text-amber",
     "进阶": "bg-rose/10 text-rose",
     "Real paper": "bg-green/10 text-green",
+    "Beginner": "bg-green/10 text-green",
+    "Intermediate": "bg-amber/10 text-amber",
+    "Advanced": "bg-rose/10 text-rose",
   };
 
   const recommendUrl = conversationId
@@ -109,11 +209,13 @@ function ReferencesContent() {
         const jsonMatch = aiData.result?.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          if (Array.isArray(parsed.references) && parsed.references.length > 0) {
-            const aiReferences = parsed.references.map((ref: Reference) => ({
+          const generatedReferences = normalizeReferences(parsed);
+          if (generatedReferences.length > 0) {
+            const aiReferences = generatedReferences.map((ref: Reference) => ({
               ...ref,
               source: "AI generated idea",
             }));
+            referencesRef.current = aiReferences;
             setReferences(aiReferences);
             saveTopicDraft({ conversationId, references: aiReferences });
           }
@@ -125,6 +227,93 @@ function ReferencesContent() {
     }
     fetchReferences();
   }, [keywords, conversationId, locale]);
+
+  useEffect(() => {
+    referencesRef.current = references;
+  }, [references]);
+
+  async function requestReferences(input: string, context: string) {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-locale": locale },
+      body: JSON.stringify({
+        strategyCode: "AI-S04",
+        input,
+        conversationId,
+        context,
+      }),
+    });
+    const data = await res.json();
+    const jsonMatch = data.result?.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return [];
+    return normalizeReferences(JSON.parse(jsonMatch[0]));
+  }
+
+  async function expandReferences() {
+    if (expanding || expandCount >= MAX_EXPANDS_PER_ROUND) return;
+    setExpanding(true);
+    setNotice("");
+    const nextRound = expandCount + 1;
+    try {
+      const current = referencesRef.current;
+      const generated = await requestReferences(
+        `Expand the reference research list with 4-6 additional ideas. Selected keywords: ${keywords}. Existing ideas: ${current.map((ref) => ref.title).join("; ")}. Avoid duplicates and open up genuinely new angles.`,
+        "The user has not chosen a final direction yet. Think broadly but stay truthful to the user's profile, conversation, and selected keywords. Return only additional reference research cases."
+      );
+      const beforeCount = current.length;
+      let next = uniqueReferences([...current, ...generated]);
+      if (next.length === beforeCount) {
+        next = uniqueReferences([...current, ...fallbackReferenceExpansion(keywords, locale, nextRound)]);
+      }
+      referencesRef.current = next;
+      setReferences(next);
+      setExpandCount(nextRound);
+      saveTopicDraft({ references: next });
+      setNotice(t("expandedCount", { count: Math.max(0, next.length - beforeCount) }));
+    } catch {
+      const current = referencesRef.current;
+      const beforeCount = current.length;
+      const next = uniqueReferences([...current, ...fallbackReferenceExpansion(keywords, locale, nextRound)]);
+      referencesRef.current = next;
+      setReferences(next);
+      setExpandCount(nextRound);
+      saveTopicDraft({ references: next });
+      setNotice(t("expandedCount", { count: Math.max(0, next.length - beforeCount) }));
+    } finally {
+      setExpanding(false);
+    }
+  }
+
+  async function regenerateReferences() {
+    setRegenerating(true);
+    setNotice("");
+    try {
+      const extra = supplement.trim()
+        ? `\nAdditional user guidance: ${supplement.trim()}`
+        : "\nThe user did not add more information. Reconsider the strategy and provide a fresher, more useful mix.";
+      const generated = await requestReferences(
+        `Regenerate a fresh reference research list for this student.${extra}\nSelected keywords: ${keywords}\nPrevious ideas: ${referencesRef.current.map((ref) => ref.title).join("; ")}`,
+        "Regenerate the whole reference list. It must stay grounded in the conversation, profile, and selected keywords while offering a noticeably different set of research-case ideas."
+      );
+      const next = uniqueReferences(
+        generated.length > 0
+          ? generated
+          : fallbackReferenceExpansion(keywords, locale, 1)
+      );
+      referencesRef.current = next;
+      setReferences(next);
+      setSelected(new Set());
+      setExpandCount(0);
+      saveTopicDraft({ conversationId, references: next, selectedRefs: [] });
+      setRegenerateOpen(false);
+      setSupplement("");
+      setNotice(t("regeneratedNotice"));
+    } catch {
+      setNotice(t("regenerateFailed"));
+    } finally {
+      setRegenerating(false);
+    }
+  }
 
   const toggle = (index: number) => {
     const next = new Set(selected);
@@ -165,6 +354,36 @@ function ReferencesContent() {
           <p className="text-sm text-text-dim">
             {t("subtitle")}
           </p>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-border bg-white/80 p-4 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-bold text-text">{t("exploreTitle")}</h2>
+            <p className="mt-1 text-xs leading-relaxed text-text-muted">
+              {expandCount < MAX_EXPANDS_PER_ROUND
+                ? t("expandHint", { remaining: MAX_EXPANDS_PER_ROUND - expandCount })
+                : t("regenerateHint")}
+            </p>
+            {notice && <p className="mt-2 text-xs font-medium text-text-muted">{notice}</p>}
+          </div>
+          {expandCount < MAX_EXPANDS_PER_ROUND ? (
+            <button
+              onClick={expandReferences}
+              disabled={expanding}
+              className="shrink-0 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition-colors hover:bg-accent/90 disabled:opacity-50"
+            >
+              {expanding ? t("expanding") : t("expand", { remaining: MAX_EXPANDS_PER_ROUND - expandCount })}
+            </button>
+          ) : (
+            <button
+              onClick={() => setRegenerateOpen(true)}
+              className="shrink-0 rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-dim transition-colors hover:border-accent hover:text-accent"
+            >
+              {t("regenerate")}
+            </button>
+          )}
         </div>
       </div>
 
@@ -250,6 +469,54 @@ function ReferencesContent() {
           {t("continue")}
         </button>
       </div>
+
+      {regenerateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-text/30 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-border bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-text">{t("regenerateModalTitle")}</h2>
+                <p className="mt-1 text-sm leading-relaxed text-text-dim">
+                  {t("regenerateModalSubtitle")}
+                </p>
+              </div>
+              <button
+                onClick={() => setRegenerateOpen(false)}
+                className="rounded-lg px-2 py-1 text-text-muted transition-colors hover:bg-surface2 hover:text-text"
+                aria-label={t("close")}
+              >
+                ×
+              </button>
+            </div>
+            <label htmlFor="reference-supplement" className="mt-5 block text-xs font-semibold uppercase tracking-wider text-text-muted">
+              {t("supplementLabel")}
+            </label>
+            <textarea
+              id="reference-supplement"
+              value={supplement}
+              onChange={(event) => setSupplement(event.target.value)}
+              placeholder={t("supplementPlaceholder")}
+              rows={4}
+              className="mt-2 w-full resize-y rounded-xl border border-border bg-surface2 px-4 py-3 text-sm text-text placeholder-text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/10"
+            />
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                onClick={() => setRegenerateOpen(false)}
+                className="rounded-xl border border-border px-5 py-2.5 text-sm font-semibold text-text-dim transition-colors hover:border-accent hover:text-accent"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={regenerateReferences}
+                disabled={regenerating}
+                className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-accent/20 transition-colors hover:bg-accent/90 disabled:opacity-50"
+              >
+                {regenerating ? t("regenerating") : t("regenerateNow")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

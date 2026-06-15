@@ -100,6 +100,7 @@ function TopicChatContent() {
     const signature = userMessages.map((m) => m.content.trim()).join("\n");
     if (signature === lastSignatureRef.current) return;
 
+    setNotes([]);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       if (abortRef.current) abortRef.current.abort();

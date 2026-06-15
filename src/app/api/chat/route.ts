@@ -3,6 +3,51 @@ import { getSessionUser } from "@/lib/session-user";
 import { chatWithAI } from "@/lib/gemini";
 import { NextRequest, NextResponse } from "next/server";
 
+interface TopicReplyShape {
+  name?: unknown;
+  reason?: unknown;
+  researchPoints?: unknown;
+}
+
+function cleanTopicChatReply(reply: string, locale: string): string {
+  const stripped = reply
+    .trim()
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
+
+  if (!stripped.startsWith("{") && !stripped.startsWith("[")) return reply;
+
+  try {
+    const parsed = JSON.parse(stripped);
+    const topics = Array.isArray(parsed.topics) ? parsed.topics : [];
+    if (topics.length === 0) return reply;
+
+    const first = topics[0] as TopicReplyShape;
+    const title = typeof first.name === "string" ? first.name : "";
+    const reason = typeof first.reason === "string" ? first.reason : "";
+    const points = Array.isArray(first.researchPoints)
+      ? first.researchPoints.filter((point): point is string => typeof point === "string")
+      : [];
+
+    if (locale === "zh") {
+      return [
+        title ? `可以，最适合改造的是「${title}」。` : "可以，这个想法可以和当前推荐课题结合。",
+        reason,
+        points.length > 0 ? `可以重点看这几个研究点：${points.slice(0, 3).join("；")}。` : "",
+      ].filter(Boolean).join("\n\n");
+    }
+
+    return [
+      title ? `Yes. The strongest fit is "${title}".` : "Yes, this idea can connect to the current topic set.",
+      reason,
+      points.length > 0 ? `The most useful angles are: ${points.slice(0, 3).join("; ")}.` : "",
+    ].filter(Boolean).join("\n\n");
+  } catch {
+    return reply;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const { conversationId, message, strategyCode, projectId, context } = body;
@@ -55,7 +100,10 @@ export async function POST(req: NextRequest) {
   const locale = req.headers.get("x-locale") ?? "en";
 
   try {
-    const reply = await chatWithAI(strategyCode || "AI-S01", messages, context, locale);
+    const rawReply = await chatWithAI(strategyCode || "AI-S01", messages, context, locale);
+    const reply = strategyCode === "AI-S05_CHAT"
+      ? cleanTopicChatReply(rawReply, locale)
+      : rawReply;
 
     // Save assistant message
     await prisma.message.create({

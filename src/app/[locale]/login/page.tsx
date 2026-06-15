@@ -24,12 +24,19 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (mode === "register" && password !== confirmPassword) {
+      setError(t("passwordMismatch"));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -142,7 +149,7 @@ export default function LoginPage() {
 
               <div className="flex bg-surface2 rounded-2xl p-1.5 mb-8">
                 <button
-                  onClick={() => { setMode("login"); setError(""); }}
+                  onClick={() => { setMode("login"); setError(""); setConfirmPassword(""); }}
                   className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
                     mode === "login" ? "bg-white text-accent shadow-sm" : "text-text-muted hover:text-text-dim"
                   }`}
@@ -207,6 +214,24 @@ export default function LoginPage() {
                     className="w-full px-4 py-3 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
                   />
                 </div>
+
+                {mode === "register" && (
+                  <div>
+                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-dim mb-1.5">
+                      {t("confirmPasswordLabel")}
+                    </label>
+                    <input
+                      id="confirmPassword"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder={t("confirmPasswordPlaceholder")}
+                      required
+                      minLength={6}
+                      className="w-full px-4 py-3 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
+                    />
+                  </div>
+                )}
 
                 {error && (
                   <div className="text-sm text-rose bg-rose/5 border border-rose/20 rounded-2xl px-4 py-3">

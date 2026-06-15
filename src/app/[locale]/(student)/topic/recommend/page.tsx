@@ -153,6 +153,40 @@ function normalizeTopic(raw: Topic, locale: string, fallbackField: string): Topi
   return topic;
 }
 
+function extractReadableReply(reply: string, locale: string): string {
+  const trimmed = reply.trim();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) return reply;
+
+  try {
+    const parsed = JSON.parse(trimmed);
+    const topics = Array.isArray(parsed.topics) ? parsed.topics : [];
+    if (topics.length === 0) return reply;
+
+    const first = topics[0] as Partial<Topic>;
+    const title = typeof first.name === "string" ? first.name : "";
+    const reason = typeof first.reason === "string" ? first.reason : "";
+    const points = Array.isArray(first.researchPoints)
+      ? first.researchPoints.filter((point): point is string => typeof point === "string")
+      : [];
+
+    if (locale === "zh") {
+      return [
+        title ? `可以，最适合改造的是「${title}」。` : "可以，这个想法可以和当前推荐课题结合。",
+        reason,
+        points.length > 0 ? `具体可以从这些角度推进：${points.slice(0, 3).join("；")}。` : "",
+      ].filter(Boolean).join("\n\n");
+    }
+
+    return [
+      title ? `Yes. The strongest fit is "${title}".` : "Yes, that idea can connect to the current topic set.",
+      reason,
+      points.length > 0 ? `A practical way to shape it would be: ${points.slice(0, 3).join("; ")}.` : "",
+    ].filter(Boolean).join("\n\n");
+  } catch {
+    return reply;
+  }
+}
+
 function RecommendContent() {
   const router = useRouter();
   const locale = useLocale();
@@ -289,23 +323,29 @@ function RecommendContent() {
 
     try {
       const topicContext = topics.map((t, i) =>
-        `#${i + 1} ${t.name}: ${t.reason}`
+        [
+          `#${i + 1} ${t.name}`,
+          `Reason: ${t.reason}`,
+          `Research points: ${t.researchPoints.join("; ")}`,
+          `Output: ${t.outputFormat}`,
+          `Duration: ${t.estimatedDuration}`,
+        ].join("\n")
       ).join("\n");
 
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-locale": locale },
         body: JSON.stringify({
-          strategyCode: "AI-S05",
+          strategyCode: "AI-S05_CHAT",
           message: userMsg,
-          context: topicContext,
+          context: `Recommended topics currently shown on screen:\n${topicContext}`,
           conversationId: conversationIdRef.current,
         }),
       });
       const data = await res.json();
       if (data.conversationId) conversationIdRef.current = data.conversationId;
       if (data.reply) {
-        setMessages((prev) => [...prev, { role: "tutor", content: data.reply }]);
+        setMessages((prev) => [...prev, { role: "tutor", content: extractReadableReply(data.reply, locale) }]);
       }
     } catch {
       setMessages((prev) => [...prev, { role: "tutor", content: t("initialMsg1", { count: topics.length }) }]);
@@ -448,7 +488,7 @@ function RecommendContent() {
                   </div>
                   <div className="flex-1">
                     <div className="bg-white rounded-2xl rounded-tl-md border border-border px-4 py-3 max-w-[85%]">
-                      <p className="text-sm text-text-dim leading-relaxed">{msg.content}</p>
+                      <p className="whitespace-pre-line text-sm text-text-dim leading-relaxed">{msg.content}</p>
                     </div>
                   </div>
                 </div>
