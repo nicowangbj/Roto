@@ -275,22 +275,35 @@ export default function ChatWindow({
       </div>
 
       <div className="border-t border-border pt-4">
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
             placeholder={placeholder ?? t("placeholder")}
-            className="flex-1 px-4 py-3 bg-surface2 border border-border rounded-xl text-sm text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-colors"
+            className="min-w-0 flex-1 px-4 py-3 bg-surface2 border border-border rounded-xl text-sm text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-colors"
             disabled={loading}
           />
           <button
             onClick={send}
             disabled={loading || !input.trim()}
-            className="px-6 py-3 bg-accent text-white font-semibold rounded-xl disabled:opacity-40 hover:bg-accent/90 transition-colors"
+            aria-label={t("send")}
+            title={t("send")}
+            className="h-12 w-12 shrink-0 inline-flex items-center justify-center bg-accent text-white rounded-xl disabled:opacity-40 hover:bg-accent/90 transition-colors"
           >
-            {t("send")}
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path
+                d="M3 10 16.5 3.5 13 16.5 9.8 11.2 3 10Z"
+                fill="currentColor"
+              />
+              <path
+                d="M9.8 11.2 16.5 3.5"
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
         </div>
       </div>
