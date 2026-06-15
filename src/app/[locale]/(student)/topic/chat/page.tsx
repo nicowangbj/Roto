@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import ChatWindow from "@/components/ChatWindow";
 import RotoAvatar from "@/components/RotoAvatar";
-import { getTopicDraft, saveTopicDraft } from "@/lib/topic-draft";
+import { clearTopicDraft, getTopicDraft, saveTopicDraft } from "@/lib/topic-draft";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -17,8 +17,9 @@ interface ProfileNote {
   summary: string;
 }
 
-export default function TopicChatPage() {
+function TopicChatContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const t = useTranslations("topicChat");
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -32,6 +33,10 @@ export default function TopicChatPage() {
 
   // Auto-resume: if there's a draft in progress, jump to where the user left off.
   useEffect(() => {
+    if (searchParams.get("fresh") === "1") {
+      clearTopicDraft();
+      return;
+    }
     const draft = getTopicDraft();
     if (!draft || draft.step === "chat") return;
     const cid = draft.conversationId ?? "";
@@ -44,7 +49,7 @@ export default function TopicChatPage() {
       keywords: `/${locale}/topic/keywords?conversationId=${cid}`,
       references: `/${locale}/topic/references?keywords=${kw}&conversationId=${cid}`,
       recommend: `/${locale}/topic/recommend?keywords=${kw}&refs=${rf}&conversationId=${cid}`,
-      confirm: `/${locale}/topic/confirm?name=${encodeURIComponent(draft.confirmForm.name || draft.topicName)}&output=${encodeURIComponent(draft.confirmForm.outputFormat || draft.topicOutput)}&duration=${encodeURIComponent(draft.confirmForm.duration || draft.topicDuration)}&description=${encodeURIComponent(draft.confirmForm.description)}`,
+      confirm: `/${locale}/topic/confirm?name=${encodeURIComponent(draft.confirmForm.name || draft.topicName)}&field=${encodeURIComponent(draft.confirmForm.field)}&output=${encodeURIComponent(draft.confirmForm.outputFormat || draft.topicOutput)}&duration=${encodeURIComponent(draft.confirmForm.duration || draft.topicDuration)}&description=${encodeURIComponent(draft.confirmForm.description)}&path=${draft.confirmForm.name ? "no_topic" : "has_topic"}`,
     };
     const url = urls[draft.step];
     if (url) router.replace(url);
@@ -188,6 +193,7 @@ export default function TopicChatPage() {
             ]}
             onConversationUpdate={(id, updated) => {
               setConversationId(id);
+              saveTopicDraft({ step: "chat", conversationId: id });
               if (updated) setMessages(updated);
             }}
           />
@@ -215,5 +221,13 @@ export default function TopicChatPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TopicChatPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="text-text-dim">...</div></div>}>
+      <TopicChatContent />
+    </Suspense>
   );
 }

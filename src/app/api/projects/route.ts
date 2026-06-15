@@ -68,6 +68,55 @@ export async function GET() {
   return NextResponse.json(projects);
 }
 
+export async function DELETE(req: NextRequest) {
+  const user = await getSessionUser();
+  if (!user) {
+    return NextResponse.json({ error: "未登录" }, { status: 401 });
+  }
+
+  const projectId = req.nextUrl.searchParams.get("projectId");
+  if (!projectId) {
+    return NextResponse.json({ error: "Missing projectId" }, { status: 400 });
+  }
+
+  const project = await prisma.project.findFirst({
+    where: { id: projectId, userId: user.id },
+    include: {
+      phases: { include: { tasks: true } },
+      conversations: true,
+    },
+  });
+
+  if (!project) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  const phaseIds = project.phases.map((phase) => phase.id);
+  const taskIds = project.phases.flatMap((phase) => phase.tasks.map((task) => task.id));
+  const conversationIds = project.conversations.map((conversation) => conversation.id);
+
+  await prisma.$transaction(async (tx) => {
+    if (conversationIds.length > 0) {
+      await tx.message.deleteMany({ where: { conversationId: { in: conversationIds } } });
+    }
+    await tx.conversation.deleteMany({ where: { projectId } });
+    if (taskIds.length > 0) {
+      await tx.submission.deleteMany({ where: { taskId: { in: taskIds } } });
+    }
+    if (phaseIds.length > 0) {
+      await tx.task.deleteMany({ where: { phaseId: { in: phaseIds } } });
+    }
+    await tx.phase.deleteMany({ where: { projectId } });
+    await tx.journalEntry.deleteMany({ where: { projectId } });
+    await tx.project.delete({ where: { id: projectId } });
+    if (project.topicId) {
+      await tx.topic.deleteMany({ where: { id: project.topicId } });
+    }
+  });
+
+  return NextResponse.json({ ok: true });
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const locale = req.headers.get("x-locale") ?? "en";

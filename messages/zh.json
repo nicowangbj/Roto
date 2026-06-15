@@ -94,7 +94,19 @@
     "noTopicCta": "让 Roto 带我找方向",
     "hasTopic": "我已经有课题了",
     "hasTopicDesc": "你直接把现有课题交给 Roto，我们一起把它压实成可执行的研究计划，再正式开跑。",
-    "hasTopicCta": "让 Roto 帮我落计划"
+    "hasTopicCta": "让 Roto 帮我落计划",
+    "projectsTitle": "你的研究项目",
+    "projectsSubtitle": "可以继续已有项目，也可以从这里创建新的研究项目。",
+    "newProject": "新建项目",
+    "projectsEmpty": "还没有项目。先从一个课题开始，Roto 会帮你生成计划。",
+    "startFirstProject": "创建第一个项目",
+    "taskProgress": "已完成 {done}/{total} 个任务",
+    "statusTopicSelection": "选题中",
+    "statusPlanning": "规划中",
+    "statusExecuting": "进行中",
+    "statusAdjusting": "调整中",
+    "statusCompleted": "已完成",
+    "statusArchived": "已归档"
   },
   "topicChat": {
     "step": "第 {current} 步 / {total} · 了解你自己",
@@ -253,7 +265,8 @@
     "weekLabel": "第{n}周",
     "viewPhase": "查看阶段详情",
     "placeholder": "告诉导师你想修改的内容...",
-    "initialMsg": "我看到了你的研究计划，一共 {phases} 个阶段。\n\n你可以告诉我想要怎么调整，比如：\n• 某个阶段的任务太多/太少\n• 想调整时间安排\n• 想增减某个阶段的内容\n• 对某个任务有疑问\n\n我会帮你优化计划！"
+    "initialMsg": "我看到了你的研究计划，一共 {phases} 个阶段。\n\n你可以告诉我想要怎么调整，比如：\n• 某个阶段的任务太多/太少\n• 想调整时间安排\n• 想增减某个阶段的内容\n• 对某个任务有疑问\n\n我会帮你优化计划！",
+    "notFound": "项目未找到"
   },
   "phase": {
     "back": "返回科研地图",
@@ -335,6 +348,8 @@
   },
   "map": {
     "loading": "加载科研地图...",
+    "empty": "请先选择一个项目，再打开对应的科研地图。",
+    "chooseProject": "返回项目首页",
     "progress": "第 {current}/{total} 周 · 已完成 {done}/{all} 个任务",
     "journalBtn": "📔 科研日志",
     "adjustBtn": "⚙️ 调整计划",
@@ -392,6 +407,15 @@
     "startNew": "开始新项目",
     "taskProgress": "{done}/{total} 任务完成",
     "newProject": "+ 创建新项目",
+    "changeAvatar": "更换",
+    "avatarAlt": "用户头像",
+    "uploadingAvatar": "上传中",
+    "avatarInvalid": "请选择 800KB 以内的图片。",
+    "avatarFailed": "头像更新失败，请重试。",
+    "deleteProject": "删除",
+    "deleting": "删除中...",
+    "deleteConfirm": "确认删除「{name}」吗？该项目的阶段、任务、提交记录和日志都会被永久删除。",
+    "deleteFailed": "项目删除失败，请重试。",
     "statusTopicSelection": "选题中",
     "statusPlanning": "规划中",
     "statusExecuting": "执行中",
@@ -454,6 +478,7 @@
     "cancelBtn": "取消"
   },
   "studentHeader": {
+    "mentorMode": "导师模式",
     "map": "科研地图",
     "journal": "科研日志",
     "adjust": "调整计划",

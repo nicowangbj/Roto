@@ -32,7 +32,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string
   "Humanities": { bg: "bg-rose/10", text: "text-rose", border: "border-rose/20" },
 };
 
-const DEFAULT_KEYWORDS: Keyword[] = [
+const DEFAULT_KEYWORDS_ZH: Keyword[] = [
   { word: "人工智能", description: "AI技术及其应用", category: "Technology" },
   { word: "数据分析", description: "统计与可视化", category: "Technology" },
   { word: "机器人", description: "自动化与控制系统", category: "Technology" },
@@ -47,6 +47,26 @@ const DEFAULT_KEYWORDS: Keyword[] = [
   { word: "城市规划", description: "智慧城市设计", category: "Engineering" },
   { word: "文学分析", description: "作品与文化研究", category: "Humanities" },
 ];
+
+const DEFAULT_KEYWORDS_EN: Keyword[] = [
+  { word: "Artificial Intelligence", description: "AI technologies and real-world applications", category: "Technology" },
+  { word: "Data Analysis", description: "Statistics, visualization, and evidence-based reasoning", category: "Technology" },
+  { word: "Robotics", description: "Automation, sensing, and control systems", category: "Technology" },
+  { word: "Environmental Protection", description: "Climate change, ecology, and sustainability", category: "Natural Science" },
+  { word: "Renewable Energy", description: "Solar, wind, and future energy systems", category: "Natural Science" },
+  { word: "Astronomy", description: "Observation of stars, planets, and the universe", category: "Natural Science" },
+  { word: "Psychology", description: "Behavior, cognition, and motivation research", category: "Social Science" },
+  { word: "Social Media", description: "Digital platforms and social influence", category: "Social Science" },
+  { word: "Education Equity", description: "Access, learning opportunities, and resource distribution", category: "Social Science" },
+  { word: "Gene Editing", description: "CRISPR technology and bioethics", category: "Biology" },
+  { word: "Food Safety", description: "Nutrition, health, and risk analysis", category: "Biology" },
+  { word: "Urban Planning", description: "Smart cities and community design", category: "Engineering" },
+  { word: "Literary Analysis", description: "Texts, culture, and interpretation", category: "Humanities" },
+];
+
+function getDefaultKeywords(locale: string) {
+  return locale === "zh" ? DEFAULT_KEYWORDS_ZH : DEFAULT_KEYWORDS_EN;
+}
 
 function normalizeKeyword(raw: StrategyKeyword, fallbackCategory = "Technology"): Keyword | null {
   const word = typeof raw.word === "string"
@@ -95,7 +115,7 @@ function KeywordsContent() {
   const conversationId = searchParams.get("conversationId");
   const t = useTranslations("topicKeywords");
   const [loading, setLoading] = useState(false);
-  const [keywords, setKeywords] = useState<Keyword[]>(DEFAULT_KEYWORDS);
+  const [keywords, setKeywords] = useState<Keyword[]>(() => getDefaultKeywords(locale));
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const CATEGORY_LABELS: Record<string, string> = {

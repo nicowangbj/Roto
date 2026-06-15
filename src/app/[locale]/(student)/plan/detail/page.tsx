@@ -49,9 +49,15 @@ function PlanDetailContent() {
   useEffect(() => {
     async function fetchProject() {
       const res = await fetch("/api/projects");
-      const projects = await res.json();
-      const p = projects.find((p: Project) => p.id === projectId) || projects[0];
-      setProject(p);
+      if (res.ok) {
+        const projects = await res.json();
+        const p = Array.isArray(projects) && projectId
+          ? projects.find((item: Project) => item.id === projectId)
+          : null;
+        setProject(p ?? null);
+      } else {
+        setProject(null);
+      }
       setLoading(false);
     }
     fetchProject();
@@ -66,7 +72,19 @@ function PlanDetailContent() {
     );
   }
 
-  if (!project) return null;
+  if (!project) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-text-dim mb-4">{t("notFound")}</p>
+        <button
+          onClick={() => router.push(`/${locale}/welcome`)}
+          className="px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl transition-colors"
+        >
+          {tCommon("back")}
+        </button>
+      </div>
+    );
+  }
 
   const planSummary = project.phases
     .map((p) => `阶段${p.order}「${p.name}」(第${p.startWeek}-${p.endWeek}周): ${p.tasks.map((t) => t.title).join("、")}`)

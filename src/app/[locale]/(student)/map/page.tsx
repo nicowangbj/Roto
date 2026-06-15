@@ -43,65 +43,12 @@ const PHASE_THEMES = [
   { main: "#a855f7", light: "#faf5ff", gradient: "from-purple-500 to-violet-500", icon: "🎯", labelKey: "phaseTheme6" },
 ];
 
-const DEFAULT_PROJECT: Project = {
-  id: "demo-1",
-  title: "社交媒体对高中生学习动机的影响研究",
-  status: "active",
-  topic: { name: "社交媒体对高中生学习动机的影响研究" },
-  phases: [
-    {
-      id: "p1", order: 1, name: "文献调研", description: "阅读相关领域文献，建立理论基础",
-      goal: "完成文献综述框架", status: "completed", startWeek: 1, endWeek: 2,
-      tasks: [
-        { id: "t1", order: 1, title: "搜索核心文献（不少于10篇）", status: "completed", weekNumber: 1 },
-        { id: "t2", order: 2, title: "撰写文献阅读笔记", status: "completed", weekNumber: 1 },
-        { id: "t3", order: 3, title: "整理文献综述大纲", status: "completed", weekNumber: 2 },
-      ],
-    },
-    {
-      id: "p2", order: 2, name: "研究设计", description: "设计研究方案，确定研究方法",
-      goal: "完成研究计划书", status: "active", startWeek: 3, endWeek: 4,
-      tasks: [
-        { id: "t4", order: 1, title: "确定研究问题与假设", status: "completed", weekNumber: 3 },
-        { id: "t5", order: 2, title: "设计问卷/访谈提纲", status: "active", weekNumber: 3 },
-        { id: "t6", order: 3, title: "撰写研究计划书", status: "locked", weekNumber: 4 },
-      ],
-    },
-    {
-      id: "p3", order: 3, name: "数据收集", description: "实施调研，收集一手数据",
-      goal: "获取有效样本数据", status: "locked", startWeek: 5, endWeek: 7,
-      tasks: [
-        { id: "t7", order: 1, title: "预测试与问卷优化", status: "locked", weekNumber: 5 },
-        { id: "t8", order: 2, title: "正式发放问卷", status: "locked", weekNumber: 6 },
-        { id: "t9", order: 3, title: "数据清洗与整理", status: "locked", weekNumber: 7 },
-      ],
-    },
-    {
-      id: "p4", order: 4, name: "数据分析", description: "运用统计方法分析数据",
-      goal: "得出研究结论", status: "locked", startWeek: 8, endWeek: 9,
-      tasks: [
-        { id: "t10", order: 1, title: "描述性统计分析", status: "locked", weekNumber: 8 },
-        { id: "t11", order: 2, title: "相关性与回归分析", status: "locked", weekNumber: 9 },
-      ],
-    },
-    {
-      id: "p5", order: 5, name: "报告撰写", description: "整合研究成果，撰写最终报告",
-      goal: "完成研究报告终稿", status: "locked", startWeek: 10, endWeek: 12,
-      tasks: [
-        { id: "t12", order: 1, title: "撰写报告初稿", status: "locked", weekNumber: 10 },
-        { id: "t13", order: 2, title: "导师修改与完善", status: "locked", weekNumber: 11 },
-        { id: "t14", order: 3, title: "定稿与提交", status: "locked", weekNumber: 12 },
-      ],
-    },
-  ],
-};
-
 function MapContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
-  const [project, setProject] = useState<Project>(DEFAULT_PROJECT);
-  const [loading, setLoading] = useState(false);
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
   const [selectedPhase, setSelectedPhase] = useState<string | null>(null);
   const [hoveredIsland, setHoveredIsland] = useState<number | null>(null);
   const t = useTranslations("map");
@@ -111,18 +58,43 @@ function MapContent() {
     async function fetchProject() {
       try {
         const res = await fetch("/api/projects");
+        if (!res.ok) throw new Error("Failed to load projects");
         const projects = await res.json();
         if (Array.isArray(projects) && projects.length > 0) {
-          const p = projects.find((p: Project) => p.id === projectId) || projects[0];
-          setProject(p);
+          const p = projectId ? projects.find((item: Project) => item.id === projectId) : null;
+          setProject(p ?? null);
         }
       } catch {
-        // keep default project
+        setProject(null);
       }
       setLoading(false);
     }
     fetchProject();
   }, [projectId]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin mb-4" />
+        <p className="text-text-dim">{t("loading")}</p>
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="text-center py-20 bg-white rounded-2xl border border-border">
+        <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center text-3xl mx-auto mb-4">🧭</div>
+        <p className="text-text-dim mb-4">{t("empty")}</p>
+        <button
+          onClick={() => router.push(`/${locale}/welcome`)}
+          className="px-6 py-2.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl transition-colors"
+        >
+          {t("chooseProject")}
+        </button>
+      </div>
+    );
+  }
 
   // Find active phase
   const activePhase = project.phases.find((p) => p.status === "active") || project.phases[0];
@@ -151,15 +123,6 @@ function MapContent() {
     setSelectedPhase(phase.id);
     router.push(`/${locale}/phase/${phase.id}?projectId=${project.id}`);
   };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <div className="w-12 h-12 border-4 border-accent/20 border-t-accent rounded-full animate-spin mb-4" />
-        <p className="text-text-dim">{t("loading")}</p>
-      </div>
-    );
-  }
 
   return (
     <div className="flex gap-6 max-w-[1300px] mx-auto">
@@ -265,7 +228,7 @@ function MapContent() {
                   <div className={`flex items-start gap-4 ${isLeft ? "mr-auto pr-12" : "ml-auto pl-12"}`} style={{ maxWidth: "75%" }}>
                     {/* Landmark icon */}
                     <div
-                      className={`w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-all duration-300 ${
+                      className={`relative w-16 h-16 rounded-2xl flex items-center justify-center text-2xl shrink-0 transition-all duration-300 ${
                         isLocked
                           ? "bg-surface2 grayscale opacity-50"
                           : isActive
@@ -279,7 +242,7 @@ function MapContent() {
                         boxShadow: isActive ? `0 8px 24px ${theme.main}30` : undefined,
                       }}
                     >
-                      <span className={isLocked ? "opacity-50" : ""}>{theme.icon}</span>
+                      <span className={`relative z-10 ${isLocked ? "opacity-50" : ""}`}>{theme.icon}</span>
                       {/* Active indicator ring */}
                       {isActive && (
                         <div
@@ -390,9 +353,24 @@ function MapContent() {
             className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 pointer-events-none z-10"
             style={{ top: `${Math.max(8, (activePhaseIndex / Math.max(project.phases.length - 1, 1)) * 70 + 8)}%` }}
           >
-            <div className="img-placeholder" style={{ width: 48, height: 48, borderRadius: "50%" }}>
-              <span className="icon">🧑‍🎓</span>
-              <span className="spec">学生角色头像 · 48x48</span>
+            <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-sky-100 via-amber-50 to-violet-100 shadow-lg shadow-sky-200/60 ring-4 ring-white flex items-center justify-center overflow-hidden">
+              <div className="absolute inset-x-1 bottom-1 h-5 rounded-full bg-gradient-to-t from-sky-300/50 to-transparent" />
+              <svg
+                viewBox="0 0 48 48"
+                className="relative h-10 w-10"
+                aria-hidden="true"
+              >
+                <circle cx="24" cy="23" r="10" fill="#F7CFA2" />
+                <path d="M14 41c1.6-7 5.1-10.5 10-10.5S32.4 34 34 41H14Z" fill="#60A5FA" />
+                <path d="M16 21c1.4-6.1 5-9.2 10.8-9.2 4.6 0 7.7 2.5 8.8 7.4-2.9-.3-5.4-1.5-7.6-3.6-2.5 2.6-6.5 4.4-12 5.4Z" fill="#334155" />
+                <path d="M14 15.5 25 10l11 5.5-11 5.5-11-5.5Z" fill="#1E3A8A" />
+                <path d="M18 18.5v4.2c1.7 1.7 4 2.6 7 2.6s5.3-.9 7-2.6v-4.2L25 22l-7-3.5Z" fill="#2563EB" />
+                <path d="M36 16v7" stroke="#FBBF24" strokeWidth="1.8" strokeLinecap="round" />
+                <circle cx="36" cy="25" r="2" fill="#FBBF24" />
+                <circle cx="20.5" cy="24" r="1.2" fill="#1F2937" />
+                <circle cx="27.5" cy="24" r="1.2" fill="#1F2937" />
+                <path d="M21 28c1.8 1.4 4.2 1.4 6 0" stroke="#7C2D12" strokeWidth="1.4" strokeLinecap="round" />
+              </svg>
             </div>
           </div>
         </div>

@@ -26,8 +26,15 @@ export default function AdjustPage() {
   useEffect(() => {
     async function fetchProject() {
       const res = await fetch("/api/projects");
-      const projects = await res.json();
-      setProject(projects.find((item: Project) => item.id === projectId) || projects[0] || null);
+      if (res.ok) {
+        const projects = await res.json();
+        const project = Array.isArray(projects) && projectId
+          ? projects.find((item: Project) => item.id === projectId)
+          : null;
+        setProject(project ?? null);
+      } else {
+        setProject(null);
+      }
       setLoading(false);
     }
     fetchProject();

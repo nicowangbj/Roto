@@ -94,7 +94,19 @@
     "noTopicCta": "Help me find a direction",
     "hasTopic": "I have a topic",
     "hasTopicDesc": "Share your topic with Roto and we'll turn it into a clear, executable research plan.",
-    "hasTopicCta": "Help me plan it out"
+    "hasTopicCta": "Help me plan it out",
+    "projectsTitle": "Your research projects",
+    "projectsSubtitle": "Continue an existing project or start a new one from here.",
+    "newProject": "New project",
+    "projectsEmpty": "No projects yet. Start with a topic and Roto will help you build the plan.",
+    "startFirstProject": "Create my first project",
+    "taskProgress": "{done}/{total} tasks completed",
+    "statusTopicSelection": "Topic selection",
+    "statusPlanning": "Planning",
+    "statusExecuting": "In progress",
+    "statusAdjusting": "Adjusting",
+    "statusCompleted": "Completed",
+    "statusArchived": "Archived"
   },
   "topicChat": {
     "step": "Step {current} / {total} · Getting to know you",
@@ -253,7 +265,8 @@
     "weekLabel": "Week {n}",
     "viewPhase": "View phase details",
     "placeholder": "Tell your mentor what you'd like to change...",
-    "initialMsg": "Your plan has {phases} phases. What would you like to change — timeline, task load, content, or something specific?"
+    "initialMsg": "Your plan has {phases} phases. What would you like to change — timeline, task load, content, or something specific?",
+    "notFound": "Project not found"
   },
   "phase": {
     "back": "Back to research map",
@@ -335,6 +348,8 @@
   },
   "map": {
     "loading": "Loading research map...",
+    "empty": "Choose a project first to open its research map.",
+    "chooseProject": "Back to project home",
     "progress": "Week {current}/{total} · {done}/{all} tasks completed",
     "journalBtn": "📔 Research Journal",
     "adjustBtn": "⚙️ Adjust Plan",
@@ -392,6 +407,15 @@
     "startNew": "Start a new project",
     "taskProgress": "{done}/{total} tasks done",
     "newProject": "+ Create new project",
+    "changeAvatar": "Change",
+    "avatarAlt": "User avatar",
+    "uploadingAvatar": "Uploading",
+    "avatarInvalid": "Please choose an image under 800KB.",
+    "avatarFailed": "Avatar update failed. Please try again.",
+    "deleteProject": "Delete",
+    "deleting": "Deleting...",
+    "deleteConfirm": "Delete \"{name}\"? This will permanently remove its phases, tasks, submissions, and journal entries.",
+    "deleteFailed": "Project deletion failed. Please try again.",
     "statusTopicSelection": "Selecting topic",
     "statusPlanning": "Planning",
     "statusExecuting": "In progress",
@@ -454,6 +478,7 @@
     "cancelBtn": "Cancel"
   },
   "studentHeader": {
+    "mentorMode": "mentor mode",
     "map": "Research Map",
     "journal": "Journal",
     "adjust": "Adjust Plan",

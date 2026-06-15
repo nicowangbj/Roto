@@ -11,7 +11,8 @@ function ConfirmContent() {
   const searchParams = useSearchParams();
   const t = useTranslations("topicConfirm");
 
-  const draft = typeof window !== "undefined" ? getTopicDraft() : null;
+  const freshStart = searchParams.get("fresh") === "1";
+  const draft = typeof window !== "undefined" && !freshStart ? getTopicDraft() : null;
   const rawName = searchParams.get("name") || draft?.confirmForm.name || "";
   const rawDescription = searchParams.get("description") || draft?.confirmForm.description || "";
   const rawOutput = searchParams.get("output") || draft?.confirmForm.outputFormat || "";
@@ -66,6 +67,10 @@ function ConfirmContent() {
   const [submitting, setSubmitting] = useState(false);
   const path = searchParams.get("path") || "no_topic";
 
+  useEffect(() => {
+    if (freshStart) clearTopicDraft();
+  }, [freshStart]);
+
   // Persist form changes to draft.
   useEffect(() => {
     saveTopicDraft({ confirmForm: { name, field, description, outputFormat, duration, weeklyHours } });
@@ -79,27 +84,35 @@ function ConfirmContent() {
         .map((index) => draft.references[index]?.title)
         .filter((title): title is string => Boolean(title)) ?? [];
 
-    const res = await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-locale": locale },
-      body: JSON.stringify({
-        topicName: name,
-        field,
-        description,
-        outputFormat,
-        duration,
-        weeklyHours,
-        selectedPath: path,
-        conversationId: draft?.conversationId,
-        userProfile: draft?.profile,
-        selectedKeywords: draft?.selectedKeywords ?? [],
-        selectedReferences,
-      }),
-    });
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-locale": locale },
+        body: JSON.stringify({
+          topicName: name,
+          field,
+          description,
+          outputFormat,
+          duration,
+          weeklyHours,
+          selectedPath: path,
+          conversationId: draft?.conversationId,
+          userProfile: draft?.profile,
+          selectedKeywords: draft?.selectedKeywords ?? [],
+          selectedReferences,
+        }),
+      });
 
-    const project = await res.json();
-    clearTopicDraft();
-    router.push(`/${locale}/plan/overview?projectId=${project.id}`);
+      const project = await res.json();
+      if (!res.ok || !project?.id) {
+        throw new Error(project?.error || "Project creation failed");
+      }
+      clearTopicDraft();
+      router.push(`/${locale}/plan/overview?projectId=${project.id}`);
+    } catch {
+      alert(locale === "zh" ? "项目创建失败，请稍后重试。" : "Project creation failed. Please try again.");
+      setSubmitting(false);
+    }
   };
 
   const inputClass = "w-full px-4 py-3 bg-surface2 border border-border rounded-xl text-sm text-text placeholder-text-muted focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-colors";

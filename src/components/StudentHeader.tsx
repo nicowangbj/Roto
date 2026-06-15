@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
@@ -11,13 +11,20 @@ export default function StudentHeader() {
   const router = useRouter();
   const locale = useLocale();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const [userName, setUserName] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
+  const projectQuery = projectId ? `?projectId=${projectId}` : "";
+  const mapHref = projectId ? `/${locale}/map${projectQuery}` : `/${locale}/welcome`;
+  const journalHref = projectId ? `/${locale}/journal${projectQuery}` : `/${locale}/welcome`;
+  const adjustHref = projectId ? `/${locale}/adjust${projectQuery}` : `/${locale}/welcome`;
 
   function switchLocale() {
     const targetLocale = locale === "en" ? "zh" : "en";
     const newPath = pathname.replace(`/${locale}`, `/${targetLocale}`);
-    router.push(newPath);
+    const query = searchParams.toString();
+    router.push(query ? `${newPath}?${query}` : newPath);
   }
 
   useEffect(() => {
@@ -38,7 +45,7 @@ export default function StudentHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-white/78 backdrop-blur-xl">
       <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
-        <Link href={`/${locale}/map`} className="flex items-center gap-3">
+        <Link href={`/${locale}/welcome`} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-2xl border border-border bg-white/85 roto-panel flex items-center justify-center text-base font-black text-brand-ink">
             R
           </div>
@@ -46,24 +53,24 @@ export default function StudentHeader() {
             <div className="text-lg font-bold tracking-tight text-brand-ink">
               Roto
             </div>
-            <div className="text-[11px] text-text-muted">mentor mode</div>
+            <div className="text-[11px] text-text-muted">{t("mentorMode")}</div>
           </div>
         </Link>
         <nav className="flex items-center gap-1">
           <Link
-            href={`/${locale}/map`}
+            href={mapHref}
             className="px-3 py-1.5 text-sm text-text-dim hover:text-accent hover:bg-accent/6 rounded-xl transition-colors"
           >
             {t("map")}
           </Link>
           <Link
-            href={`/${locale}/journal`}
+            href={journalHref}
             className="px-3 py-1.5 text-sm text-text-dim hover:text-accent hover:bg-accent/6 rounded-xl transition-colors"
           >
             {t("journal")}
           </Link>
           <Link
-            href={`/${locale}/adjust`}
+            href={adjustHref}
             className="px-3 py-1.5 text-sm text-text-dim hover:text-accent hover:bg-accent/6 rounded-xl transition-colors"
           >
             {t("adjust")}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
@@ -17,6 +17,8 @@ interface JournalEntry {
 export default function JournalEntryPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const entryId = params.entryId as string;
   const [entry, setEntry] = useState<JournalEntry | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,14 +27,21 @@ export default function JournalEntryPage() {
 
   useEffect(() => {
     async function fetchEntry() {
-      const res = await fetch("/api/journal");
+      const res = await fetch(projectId ? `/api/journal?projectId=${projectId}` : "/api/journal");
+      if (!res.ok) {
+        setEntry(null);
+        setLoading(false);
+        return;
+      }
       const entries = await res.json();
-      const found = entries.find((e: JournalEntry) => e.id === entryId);
+      const found = Array.isArray(entries)
+        ? entries.find((e: JournalEntry) => e.id === entryId)
+        : null;
       setEntry(found || null);
       setLoading(false);
     }
     fetchEntry();
-  }, [entryId]);
+  }, [entryId, projectId]);
 
   if (loading) {
     return (
@@ -49,7 +58,7 @@ export default function JournalEntryPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <button
-        onClick={() => router.push(`/${locale}/journal`)}
+        onClick={() => router.push(`/${locale}/journal${projectId ? `?projectId=${projectId}` : ""}`)}
         className="text-text-dim hover:text-accent text-sm mb-6 inline-flex items-center gap-1 transition-colors"
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">

@@ -35,8 +35,13 @@ export default function JournalPage() {
     async function fetchJournal() {
       const url = projectId ? `/api/journal?projectId=${projectId}` : "/api/journal";
       const res = await fetch(url);
+      if (!res.ok) {
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
       const data = await res.json();
-      setEntries(data);
+      setEntries(Array.isArray(data) ? data : []);
       setLoading(false);
     }
     fetchJournal();
@@ -88,7 +93,11 @@ export default function JournalPage() {
                   <div className="absolute -left-8 top-6 w-4 h-4 rounded-full bg-accent border-4 border-bg z-10" />
 
                   <button
-                    onClick={() => router.push(`/${locale}/journal/${entry.id}`)}
+                    onClick={() =>
+                      router.push(
+                        `/${locale}/journal/${entry.id}${projectId ? `?projectId=${projectId}` : ""}`
+                      )
+                    }
                     className="w-full text-left bg-white rounded-2xl border border-border p-5 hover:border-accent hover:shadow-sm transition-all"
                   >
                     <div className="flex items-center gap-2 mb-2">

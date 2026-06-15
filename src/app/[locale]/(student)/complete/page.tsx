@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
@@ -14,6 +14,8 @@ interface Project {
 
 export default function CompletePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const projectId = searchParams.get("projectId");
   const [project, setProject] = useState<Project | null>(null);
   const t = useTranslations("complete");
   const locale = useLocale();
@@ -22,10 +24,10 @@ export default function CompletePage() {
     async function fetchProject() {
       const res = await fetch("/api/projects");
       const projects = await res.json();
-      setProject(projects[0] || null);
+      setProject(projects.find((item: Project) => item.id === projectId) || projects[0] || null);
     }
     fetchProject();
-  }, []);
+  }, [projectId]);
 
   return (
     <div className="max-w-2xl mx-auto text-center py-12">
@@ -45,10 +47,24 @@ export default function CompletePage() {
         </p>
       </div>
 
-      {/* Achievement placeholder */}
+      {/* Achievement decoration */}
       <div className="mb-8">
-        <div className="img-placeholder mx-auto" style={{ width: 300, height: 100 }}>
-          <span className="spec">完成勋章/证书装饰 · 300x100 · 成就感视觉</span>
+        <div className="relative mx-auto w-full max-w-sm overflow-hidden rounded-[28px] border border-green/20 bg-gradient-to-br from-green/10 via-cyan/10 to-amber/10 px-6 py-5 shadow-sm">
+          <div className="absolute -left-10 -top-10 h-24 w-24 rounded-full bg-white/45" />
+          <div className="absolute -right-8 -bottom-12 h-28 w-28 rounded-full bg-amber/20" />
+          <div className="relative flex items-center justify-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-green/15">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+                <circle cx="18" cy="14" r="8" fill="#FBBF24" />
+                <path d="M13 21 9 32l9-4 9 4-4-11" fill="#22C55E" />
+                <path d="m14.5 14 2.5 2.5 5-5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-green">{t("title")}</p>
+              <p className="mt-1 text-sm font-semibold text-brand-ink">{project?.topic?.name || t("defaultTopic")}</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -72,7 +88,7 @@ export default function CompletePage() {
 
       <div className="flex gap-4 justify-center">
         <button
-          onClick={() => router.push(`/${locale}/journal`)}
+          onClick={() => router.push(`/${locale}/journal${project?.id ? `?projectId=${project.id}` : ""}`)}
           className="px-8 py-3.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-accent/20"
         >
           {t("viewJournal")}

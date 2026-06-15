@@ -33,6 +33,37 @@ interface Project {
 const PHASE_COLORS = ["#6366f1", "#06b6d4", "#22c55e", "#f59e0b", "#f43f5e", "#a855f7"];
 const PHASE_ICONS = ["📖", "🔍", "🧪", "📊", "✍️", "🎯"];
 
+function getTopicInitials(title: string) {
+  const words = title.match(/[A-Za-z0-9]+/g);
+  if (words && words.length > 0) {
+    return words.slice(0, 2).map((word) => word[0]).join("").toUpperCase();
+  }
+  return title.replace(/\s/g, "").slice(0, 2) || "R";
+}
+
+function getCoverTheme(title: string, field?: string | null) {
+  const text = `${title} ${field ?? ""}`.toLowerCase();
+  if (/price|pricing|market|econom|business|game theory|competition|经济/.test(text)) {
+    return {
+      icon: "∑",
+      from: "#fef3c7",
+      via: "#fde68a",
+      to: "#38bdf8",
+      accent: "#0f766e",
+    };
+  }
+  if (/psychology|mental|motivation|心理|动机/.test(text)) {
+    return { icon: "ψ", from: "#f5d0fe", via: "#dbeafe", to: "#bae6fd", accent: "#7c3aed" };
+  }
+  if (/environment|climate|biology|green|环境|气候|生物/.test(text)) {
+    return { icon: "◍", from: "#dcfce7", via: "#bbf7d0", to: "#bae6fd", accent: "#16a34a" };
+  }
+  if (/ai|computer|technology|coding|python|技术|人工智能/.test(text)) {
+    return { icon: "</>", from: "#e0f2fe", via: "#ddd6fe", to: "#fef3c7", accent: "#2563eb" };
+  }
+  return { icon: "R", from: "#fff7ed", via: "#dbeafe", to: "#ede9fe", accent: "#6366f1" };
+}
+
 function formatForLocale(value: string | null | undefined, locale: string): string | null {
   if (!value) return null;
   if (locale !== "en") return value;
@@ -60,9 +91,15 @@ function OverviewContent() {
   useEffect(() => {
     async function fetchProject() {
       const res = await fetch("/api/projects");
-      const projects = await res.json();
-      const p = projects.find((p: Project) => p.id === projectId) || projects[0];
-      setProject(p);
+      if (res.ok) {
+        const projects = await res.json();
+        const p = Array.isArray(projects) && projectId
+          ? projects.find((item: Project) => item.id === projectId)
+          : null;
+        setProject(p ?? null);
+      } else {
+        setProject(null);
+      }
       setLoading(false);
     }
     fetchProject();
@@ -90,6 +127,9 @@ function OverviewContent() {
     formatForLocale(project.topic?.weeklyHours, locale) || t("defaultWeeklyHours");
   const duration =
     formatForLocale(project.topic?.duration, locale) || t("defaultDuration");
+  const topicTitle = project.topic?.name || project.title;
+  const coverTheme = getCoverTheme(topicTitle, project.topic?.field);
+  const topicInitials = getTopicInitials(topicTitle);
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -98,12 +138,44 @@ function OverviewContent() {
         <div className="h-2 bg-gradient-to-r from-accent via-purple to-cyan" />
         <div className="p-6 lg:p-8">
           <div className="flex items-start gap-5">
-            <div className="img-placeholder shrink-0" style={{ width: 80, height: 80, borderRadius: "16px" }}>
-              <span className="icon">🔬</span>
-              <span className="spec">{t("coverImageSpec")}</span>
+            <div
+              className="relative shrink-0 h-24 w-24 overflow-hidden rounded-2xl shadow-sm ring-1 ring-black/5"
+              style={{
+                background: `linear-gradient(135deg, ${coverTheme.from} 0%, ${coverTheme.via} 52%, ${coverTheme.to} 100%)`,
+              }}
+              aria-label={topicTitle}
+            >
+              <div className="absolute -right-5 -top-5 h-14 w-14 rounded-full bg-white/35" />
+              <div className="absolute -bottom-7 -left-5 h-16 w-16 rounded-full bg-white/30" />
+              <div className="absolute inset-x-3 top-3 flex items-center justify-between">
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70 text-[11px] font-black shadow-sm"
+                  style={{ color: coverTheme.accent }}
+                >
+                  {coverTheme.icon}
+                </span>
+                <span className="h-2 w-2 rounded-full bg-white/75" />
+              </div>
+              <div className="absolute bottom-3 left-3 right-3">
+                <div className="mb-2 flex items-end gap-1.5">
+                  {[18, 28, 14, 34].map((height, index) => (
+                    <span
+                      key={index}
+                      className="w-2 rounded-full bg-white/75"
+                      style={{ height }}
+                    />
+                  ))}
+                </div>
+                <div
+                  className="inline-flex rounded-lg bg-white/75 px-2 py-1 text-xs font-black tracking-wide shadow-sm"
+                  style={{ color: coverTheme.accent }}
+                >
+                  {topicInitials}
+                </div>
+              </div>
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-text mb-2">{project.topic?.name || project.title}</h1>
+              <h1 className="text-xl font-bold text-text mb-2">{topicTitle}</h1>
               <p className="text-sm text-text-dim leading-relaxed mb-4">
                 {project.topic?.description || t("defaultProjectDescription")}
               </p>
@@ -178,18 +250,20 @@ function OverviewContent() {
       </div>
 
       {/* Overall overview stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="stat-card p-4 rounded-xl text-center">
-          <p className="text-2xl font-bold text-accent">{project.phases.length}</p>
-          <p className="text-xs text-text-muted mt-1">{t("statPhases")}</p>
+      <div className="space-y-4 mb-8">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="stat-card p-4 rounded-xl text-center">
+            <p className="text-2xl font-bold text-accent">{project.phases.length}</p>
+            <p className="text-xs text-text-muted mt-1">{t("statPhases")}</p>
+          </div>
+          <div className="stat-card p-4 rounded-xl text-center">
+            <p className="text-2xl font-bold text-cyan">{totalWeeks || "—"}</p>
+            <p className="text-xs text-text-muted mt-1">{t("statWeeks")}</p>
+          </div>
         </div>
-        <div className="stat-card p-4 rounded-xl text-center">
-          <p className="text-2xl font-bold text-cyan">{totalWeeks || "—"}</p>
-          <p className="text-xs text-text-muted mt-1">{t("statWeeks")}</p>
-        </div>
-        <div className="stat-card p-4 rounded-xl text-center">
-          <p className="text-2xl font-bold text-green">{outputFormat}</p>
-          <p className="text-xs text-text-muted mt-1">{t("statOutput")}</p>
+        <div className="stat-card p-5 rounded-xl">
+          <p className="text-xs uppercase tracking-[0.18em] text-text-muted mb-2">{t("statOutput")}</p>
+          <p className="text-lg font-semibold text-green leading-snug">{outputFormat}</p>
         </div>
       </div>
 
