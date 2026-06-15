@@ -167,7 +167,9 @@
     "loading": "Searching for related research...",
     "diffBeginner": "Beginner",
     "diffIntermediate": "Intermediate",
-    "diffAdvanced": "Advanced"
+    "diffAdvanced": "Advanced",
+    "realPaper": "Real paper",
+    "sourceAvailable": "Source link available"
   },
   "topicRecommend": {
     "title": "Topic recommendations",

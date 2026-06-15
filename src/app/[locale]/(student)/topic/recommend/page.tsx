@@ -19,7 +19,7 @@ interface Message {
   content: string;
 }
 
-const DEFAULT_TOPICS: Topic[] = [
+const DEFAULT_TOPICS_ZH: Topic[] = [
   {
     name: "社交媒体对高中生学习动机的影响研究",
     reason: "结合你对心理学和社交媒体的兴趣，这个课题容易获取数据且具有实际意义",
@@ -43,6 +43,67 @@ const DEFAULT_TOPICS: Topic[] = [
   },
 ];
 
+const DEFAULT_TOPICS_EN: Topic[] = [
+  {
+    name: "How Social Media Affects High School Students' Learning Motivation",
+    reason: "This topic connects psychology and social media, while still being practical for school-based survey research.",
+    researchPoints: ["Survey design and data collection", "Correlation analysis", "Identifying influence factors"],
+    outputFormat: "Research report",
+    estimatedDuration: "10 weeks",
+  },
+  {
+    name: "How Campus Vegetation Influences Local Microclimate",
+    reason: "This topic can be studied with accessible school resources and is suitable for beginner research.",
+    researchPoints: ["Temperature and humidity data collection", "Vegetation coverage observation", "Data comparison and analysis"],
+    outputFormat: "Experimental report",
+    estimatedDuration: "8 weeks",
+  },
+  {
+    name: "The Impact of AI Writing Tools on High School Students' Writing Ability",
+    reason: "This is a timely topic that can be explored through a small classroom or school-based comparison study.",
+    researchPoints: ["Experimental design", "Writing quality assessment", "Student feedback analysis"],
+    outputFormat: "Research paper",
+    estimatedDuration: "12 weeks",
+  },
+];
+
+function getDefaultTopics(locale: string) {
+  return locale === "zh" ? DEFAULT_TOPICS_ZH : DEFAULT_TOPICS_EN;
+}
+
+function containsCjk(text: string) {
+  return /[\u3400-\u9fff]/.test(text);
+}
+
+function formatForLocale(value: string, locale: string) {
+  if (locale === "zh") return value;
+  return value
+    .replace(/研究报告/g, "Research report")
+    .replace(/实验报告/g, "Experimental report")
+    .replace(/研究论文/g, "Research paper")
+    .replace(/论文/g, "Research paper")
+    .replace(/周/g, " weeks");
+}
+
+function normalizeTopic(raw: Topic, locale: string): Topic | null {
+  const topic = {
+    name: raw.name || "",
+    reason: raw.reason || "",
+    researchPoints: Array.isArray(raw.researchPoints) ? raw.researchPoints : [],
+    outputFormat: formatForLocale(raw.outputFormat || "", locale),
+    estimatedDuration: formatForLocale(raw.estimatedDuration || "", locale),
+  };
+
+  if (
+    locale !== "zh" &&
+    [topic.name, topic.reason, ...topic.researchPoints].some((text) => containsCjk(text))
+  ) {
+    return null;
+  }
+
+  return topic;
+}
+
 function RecommendContent() {
   const router = useRouter();
   const locale = useLocale();
@@ -52,15 +113,16 @@ function RecommendContent() {
   const keywords = searchParams.get("keywords") || "";
   const refs = searchParams.get("refs") || "";
   const conversationId = searchParams.get("conversationId");
-  const [topics, setTopics] = useState<Topic[]>(DEFAULT_TOPICS);
+  const [topics, setTopics] = useState<Topic[]>(() => getDefaultTopics(locale));
   const [expandedTopic, setExpandedTopic] = useState<number | null>(0);
   const [isRecording, setIsRecording] = useState(false);
   const [inputText, setInputText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const topicRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const keywordsParam = encodeURIComponent(keywords);
   const backUrl = conversationId
-    ? `/${locale}/topic/references?keywords=${keywords}&conversationId=${conversationId}`
-    : `/${locale}/topic/references?keywords=${keywords}`;
+    ? `/${locale}/topic/references?keywords=${keywordsParam}&conversationId=${conversationId}`
+    : `/${locale}/topic/references?keywords=${keywordsParam}`;
 
   // Conversation messages — only text bubbles, not tied to any topic card.
   const [messages, setMessages] = useState<Message[]>([]);
@@ -121,7 +183,9 @@ function RecommendContent() {
             strategyCode: "AI-S05",
             input: `Selected keywords: ${keywords}\nResearch of interest: ${refs}`,
             conversationId,
-            context: "Generate specific topic recommendations based on the user's conversation transcript, profile, selected keywords, and selected reference cases.",
+            context: locale === "zh"
+              ? "基于用户对话记录、画像、已选关键词和已选参考案例生成具体课题推荐。所有 JSON 字符串值必须使用简体中文。"
+              : "Generate specific topic recommendations based on the user's conversation transcript, profile, selected keywords, and selected reference cases. Every JSON string value must be written in natural English only.",
           }),
         });
         const data = await res.json();
@@ -129,7 +193,12 @@ function RecommendContent() {
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           if (Array.isArray(parsed.topics) && parsed.topics.length > 0) {
-            setTopics(parsed.topics);
+            const normalizedTopics = parsed.topics
+              .map((topic: Topic) => normalizeTopic(topic, locale))
+              .filter((topic: Topic | null): topic is Topic => Boolean(topic));
+            if (normalizedTopics.length > 0) {
+              setTopics(normalizedTopics);
+            }
           }
         }
       } catch {

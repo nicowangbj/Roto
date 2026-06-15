@@ -167,7 +167,9 @@
     "loading": "正在搜索相关研究...",
     "diffBeginner": "入门",
     "diffIntermediate": "中等",
-    "diffAdvanced": "进阶"
+    "diffAdvanced": "进阶",
+    "realPaper": "真实论文",
+    "sourceAvailable": "可查看来源链接"
   },
   "topicRecommend": {
     "title": "课题推荐",

@@ -10,6 +10,11 @@ interface Reference {
   description: string;
   difficulty: string;
   field: string;
+  source?: string;
+  url?: string | null;
+  year?: number | null;
+  authors?: string[];
+  citationCount?: number;
 }
 
 const DEFAULT_REFERENCES: Reference[] = [
@@ -55,17 +60,19 @@ function ReferencesContent() {
     "入门": t("diffBeginner"),
     "中等": t("diffIntermediate"),
     "进阶": t("diffAdvanced"),
+    "Real paper": t("realPaper"),
   };
 
   const DIFFICULTY_STYLE: Record<string, string> = {
     "入门": "bg-green/10 text-green",
     "中等": "bg-amber/10 text-amber",
     "进阶": "bg-rose/10 text-rose",
+    "Real paper": "bg-green/10 text-green",
   };
 
   const recommendUrl = conversationId
-    ? `/${locale}/topic/recommend?keywords=${keywords}&refs=${encodeURIComponent([...selected].map((i) => references[i].title).join(","))}&conversationId=${conversationId}`
-    : `/${locale}/topic/recommend?keywords=${keywords}&refs=${encodeURIComponent([...selected].map((i) => references[i].title).join(","))}`;
+    ? `/${locale}/topic/recommend?keywords=${encodeURIComponent(keywords)}&refs=${encodeURIComponent([...selected].map((i) => references[i].title).join(","))}&conversationId=${conversationId}`
+    : `/${locale}/topic/recommend?keywords=${encodeURIComponent(keywords)}&refs=${encodeURIComponent([...selected].map((i) => references[i].title).join(","))}`;
   const backUrl = conversationId
     ? `/${locale}/topic/keywords?conversationId=${conversationId}`
     : `/${locale}/topic/keywords`;
@@ -77,23 +84,38 @@ function ReferencesContent() {
     async function fetchReferences() {
       setLoading(true);
       try {
-        const res = await fetch("/api/generate", {
+        const realRes = await fetch(
+          `/api/references/semantic-scholar?query=${encodeURIComponent(keywords)}&limit=8`
+        );
+        const realData = await realRes.json();
+        if (Array.isArray(realData.references) && realData.references.length > 0) {
+          setReferences(realData.references);
+          saveTopicDraft({ conversationId, references: realData.references });
+          setLoading(false);
+          return;
+        }
+
+        const aiRes = await fetch("/api/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-locale": locale },
           body: JSON.stringify({
             strategyCode: "AI-S04",
             input: `Selected keywords: ${keywords}`,
             conversationId,
-            context: "Generate reference research cases based on the user's conversation transcript, profile, and selected keywords.",
+            context: "Generate reference research ideas based on the user's conversation transcript, profile, and selected keywords. Mark these as AI-generated ideas, not verified papers.",
           }),
         });
-        const data = await res.json();
-        const jsonMatch = data.result?.match(/\{[\s\S]*\}/);
+        const aiData = await aiRes.json();
+        const jsonMatch = aiData.result?.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
           if (Array.isArray(parsed.references) && parsed.references.length > 0) {
-            setReferences(parsed.references);
-            saveTopicDraft({ conversationId, references: parsed.references });
+            const aiReferences = parsed.references.map((ref: Reference) => ({
+              ...ref,
+              source: "AI generated idea",
+            }));
+            setReferences(aiReferences);
+            saveTopicDraft({ conversationId, references: aiReferences });
           }
         }
       } catch {
@@ -148,9 +170,14 @@ function ReferencesContent() {
 
       <div className="grid gap-3">
         {references.map((ref, i) => (
-          <button
+          <div
             key={i}
             onClick={() => toggle(i)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") toggle(i);
+            }}
             className={`w-full text-left bg-white rounded-2xl border-2 p-5 transition-all ${
               selected.has(i)
                 ? "border-accent bg-accent/[0.02] shadow-md shadow-accent/10"
@@ -175,17 +202,40 @@ function ReferencesContent() {
               <div className="flex-1">
                 <h3 className="font-bold text-text mb-1">{ref.title}</h3>
                 <p className="text-sm text-text-dim mb-3">{ref.description}</p>
-                <div className="flex gap-2">
+                {ref.authors && ref.authors.length > 0 && (
+                  <p className="text-xs text-text-muted mb-3">
+                    {ref.authors.join(", ")}
+                    {ref.year ? ` · ${ref.year}` : ""}
+                    {typeof ref.citationCount === "number" ? ` · ${ref.citationCount} citations` : ""}
+                  </p>
+                )}
+                <div className="flex flex-wrap gap-2">
                   <span className="px-2.5 py-0.5 bg-accent/10 text-accent text-xs font-medium rounded-full">
                     {ref.field}
                   </span>
                   <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${DIFFICULTY_STYLE[ref.difficulty] || "bg-surface2 text-text-muted"}`}>
                     {DIFFICULTY_LABELS[ref.difficulty] ?? ref.difficulty}
                   </span>
+                  {ref.source && (
+                    <span className="px-2.5 py-0.5 bg-green/10 text-green text-xs font-medium rounded-full">
+                      {ref.source}
+                    </span>
+                  )}
+                  {ref.url && (
+                    <a
+                      href={ref.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                      className="px-2.5 py-0.5 bg-surface2 text-text-muted text-xs font-medium rounded-full hover:text-accent"
+                    >
+                      {t("sourceAvailable")}
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
 

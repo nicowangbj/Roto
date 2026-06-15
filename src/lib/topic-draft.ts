@@ -12,6 +12,11 @@ export interface TopicDraftReference {
   description: string;
   difficulty: string;
   field: string;
+  source?: string;
+  url?: string | null;
+  year?: number | null;
+  authors?: string[];
+  citationCount?: number;
 }
 
 export interface TopicDraftProfile {

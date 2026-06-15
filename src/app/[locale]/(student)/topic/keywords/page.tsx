@@ -164,9 +164,10 @@ function KeywordsContent() {
   };
 
   const categories = [...new Set(keywords.map((k) => k.category))];
+  const selectedKeywordsParam = encodeURIComponent([...selected].join(","));
   const referencesUrl = conversationId
-    ? `/${locale}/topic/references?keywords=${[...selected].join(",")}&conversationId=${conversationId}`
-    : `/${locale}/topic/references?keywords=${[...selected].join(",")}`;
+    ? `/${locale}/topic/references?keywords=${selectedKeywordsParam}&conversationId=${conversationId}`
+    : `/${locale}/topic/references?keywords=${selectedKeywordsParam}`;
   const backUrl = conversationId
     ? `/${locale}/topic/profile?conversationId=${conversationId}`
     : `/${locale}/topic/profile?quickStart=1`;
