@@ -350,14 +350,14 @@ function MapContent() {
 
           {/* Character on the path */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 pointer-events-none z-10"
+            className="absolute left-8 -translate-y-1/2 transition-all duration-700 pointer-events-none z-10"
             style={{ top: `${Math.max(8, (activePhaseIndex / Math.max(project.phases.length - 1, 1)) * 70 + 8)}%` }}
           >
-            <div className="relative h-12 w-12 rounded-full bg-gradient-to-br from-sky-100 via-amber-50 to-violet-100 shadow-lg shadow-sky-200/60 ring-4 ring-white flex items-center justify-center overflow-hidden">
+            <div className="relative h-10 w-10 rounded-full bg-gradient-to-br from-sky-100 via-amber-50 to-violet-100 shadow-lg shadow-sky-200/60 ring-4 ring-white flex items-center justify-center overflow-hidden">
               <div className="absolute inset-x-1 bottom-1 h-5 rounded-full bg-gradient-to-t from-sky-300/50 to-transparent" />
               <svg
                 viewBox="0 0 48 48"
-                className="relative h-10 w-10"
+                className="relative h-8 w-8"
                 aria-hidden="true"
               >
                 <circle cx="24" cy="23" r="10" fill="#F7CFA2" />

@@ -135,14 +135,15 @@ function PhaseContent() {
                 <button
                   key={task.id}
                   onClick={() => {
-                    if (!isLocked) {
-                      router.push(`/${locale}/task/${task.id}?projectId=${projectId}`);
+                    if (isLocked) {
+                      alert(t("lockedTaskHint"));
+                      return;
                     }
+                    router.push(`/${locale}/task/${task.id}?projectId=${projectId}`);
                   }}
-                  disabled={isLocked}
                   className={`w-full text-left bg-white rounded-2xl border p-5 transition-all ${
                     isLocked
-                      ? "opacity-40 cursor-not-allowed border-border"
+                      ? "opacity-40 cursor-pointer border-border hover:border-amber/40"
                       : isActive
                       ? "border-accent shadow-md shadow-accent/10 hover:shadow-lg cursor-pointer"
                       : isDone

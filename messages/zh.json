@@ -293,6 +293,7 @@
     "statusActive": "进行中",
     "statusDone": "已完成",
     "statusLocked": "🔒",
+    "lockedTaskHint": "这个任务还未解锁，请先完成前面的任务。",
     "chatTitle": "有问题随时问我",
     "placeholder": "关于这个阶段，问我...",
     "initialMsg": "你正在进行「{phaseName}」阶段。这个阶段的目标是{goal}。有什么疑问吗？我可以帮你理清思路！",

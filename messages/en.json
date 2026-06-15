@@ -293,6 +293,7 @@
     "statusActive": "In progress",
     "statusDone": "Completed",
     "statusLocked": "🔒",
+    "lockedTaskHint": "This task is locked. Please complete the previous task first.",
     "chatTitle": "Ask me anytime",
     "placeholder": "Ask me about this phase...",
     "initialMsg": "You're currently in the \"{phaseName}\" phase. The goal is: {goal}. Any questions? I can help you think it through!",
