@@ -4,12 +4,14 @@ import { useEffect, useState, useRef, Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import RotoAvatar from "@/components/RotoAvatar";
-import { saveTopicDraft } from "@/lib/topic-draft";
+import { getTopicDraft, saveTopicDraft } from "@/lib/topic-draft";
 
 interface Topic {
   name: string;
   reason: string;
   researchPoints: string[];
+  field?: string;
+  researchField?: string;
   outputFormat: string;
   estimatedDuration: string;
 }
@@ -24,6 +26,7 @@ const DEFAULT_TOPICS_ZH: Topic[] = [
     name: "社交媒体对高中生学习动机的影响研究",
     reason: "结合你对心理学和社交媒体的兴趣，这个课题容易获取数据且具有实际意义",
     researchPoints: ["问卷设计与数据收集", "相关性分析", "影响因素识别"],
+    field: "心理学",
     outputFormat: "研究报告",
     estimatedDuration: "10周",
   },
@@ -31,6 +34,7 @@ const DEFAULT_TOPICS_ZH: Topic[] = [
     name: "校园植被对小气候的调节效应",
     reason: "利用身边资源即可开展研究，适合入门级科研",
     researchPoints: ["温度湿度数据采集", "植被覆盖率统计", "数据对比分析"],
+    field: "环境科学",
     outputFormat: "实验报告",
     estimatedDuration: "8周",
   },
@@ -38,6 +42,7 @@ const DEFAULT_TOPICS_ZH: Topic[] = [
     name: "AI 写作辅助工具对高中生写作能力的影响",
     reason: "紧贴时代热点，且可以在校园内方便地开展对照实验",
     researchPoints: ["实验设计", "写作质量评估", "学生反馈分析"],
+    field: "教育技术",
     outputFormat: "研究论文",
     estimatedDuration: "12周",
   },
@@ -48,6 +53,7 @@ const DEFAULT_TOPICS_EN: Topic[] = [
     name: "How Social Media Affects High School Students' Learning Motivation",
     reason: "This topic connects psychology and social media, while still being practical for school-based survey research.",
     researchPoints: ["Survey design and data collection", "Correlation analysis", "Identifying influence factors"],
+    field: "Psychology",
     outputFormat: "Research report",
     estimatedDuration: "10 weeks",
   },
@@ -55,6 +61,7 @@ const DEFAULT_TOPICS_EN: Topic[] = [
     name: "How Campus Vegetation Influences Local Microclimate",
     reason: "This topic can be studied with accessible school resources and is suitable for beginner research.",
     researchPoints: ["Temperature and humidity data collection", "Vegetation coverage observation", "Data comparison and analysis"],
+    field: "Environmental Science",
     outputFormat: "Experimental report",
     estimatedDuration: "8 weeks",
   },
@@ -62,6 +69,7 @@ const DEFAULT_TOPICS_EN: Topic[] = [
     name: "The Impact of AI Writing Tools on High School Students' Writing Ability",
     reason: "This is a timely topic that can be explored through a small classroom or school-based comparison study.",
     researchPoints: ["Experimental design", "Writing quality assessment", "Student feedback analysis"],
+    field: "Education Technology",
     outputFormat: "Research paper",
     estimatedDuration: "12 weeks",
   },
@@ -85,13 +93,54 @@ function formatForLocale(value: string, locale: string) {
     .replace(/周/g, " weeks");
 }
 
-function normalizeTopic(raw: Topic, locale: string): Topic | null {
+function normalizeOutputFormat(value: string, locale: string) {
+  const lower = value.toLowerCase();
+  if (locale === "zh") {
+    if (value.includes("实验")) return "实验报告";
+    if (value.includes("调研") || value.includes("问卷") || value.includes("案例")) return "调研报告";
+    if (value.includes("论文")) return "论文";
+    return "研究报告";
+  }
+  if (lower.includes("experiment")) return "Experimental report";
+  if (lower.includes("survey") || lower.includes("case")) return "Survey report";
+  if (lower.includes("paper")) return "Academic paper";
+  return "Research report";
+}
+
+function normalizeDuration(value: string, locale: string) {
+  const numbers = value.match(/\d+/g)?.map(Number) ?? [];
+  const maxNumber = numbers.length > 0 ? Math.max(...numbers) : 12;
+  const isMonth = /month|月/i.test(value);
+  const weeks = isMonth ? maxNumber * 4 : maxNumber;
+  const options = [6, 8, 10, 12, 16];
+  const closest = options.reduce((best, option) =>
+    Math.abs(option - weeks) < Math.abs(best - weeks) ? option : best
+  );
+  return locale === "zh" ? `${closest}周` : `${closest} weeks`;
+}
+
+function inferField(topic: Topic, locale: string, fallbackField: string) {
+  const explicitField = topic.field || topic.researchField;
+  if (explicitField) return formatForLocale(explicitField, locale);
+
+  const text = `${topic.name} ${topic.reason} ${topic.researchPoints.join(" ")}`.toLowerCase();
+  if (/price|pricing|market|business|econom|bertrand|cournot|coffee|competition/.test(text)) {
+    return locale === "zh" ? "经济学" : "Economics";
+  }
+  if (/streaming|media|social/.test(text)) return locale === "zh" ? "传媒研究" : "Media Studies";
+  if (/environment|sustainable|climate|green/.test(text)) return locale === "zh" ? "环境科学" : "Environmental Science";
+  if (/ai|writing|education|learning/.test(text)) return locale === "zh" ? "教育技术" : "Education Technology";
+  return fallbackField || (locale === "zh" ? "跨学科研究" : "Interdisciplinary Research");
+}
+
+function normalizeTopic(raw: Topic, locale: string, fallbackField: string): Topic | null {
   const topic = {
     name: raw.name || "",
     reason: raw.reason || "",
     researchPoints: Array.isArray(raw.researchPoints) ? raw.researchPoints : [],
-    outputFormat: formatForLocale(raw.outputFormat || "", locale),
-    estimatedDuration: formatForLocale(raw.estimatedDuration || "", locale),
+    field: inferField(raw, locale, fallbackField),
+    outputFormat: normalizeOutputFormat(raw.outputFormat || "", locale),
+    estimatedDuration: normalizeDuration(raw.estimatedDuration || "", locale),
   };
 
   if (
@@ -119,6 +168,12 @@ function RecommendContent() {
   const [inputText, setInputText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const topicRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const draft = typeof window !== "undefined" ? getTopicDraft() : null;
+  const selectedReferenceFields =
+    draft?.selectedRefs
+      .map((index) => draft.references[index]?.field)
+      .filter((field): field is string => Boolean(field)) ?? [];
+  const fallbackField = selectedReferenceFields[0] || "";
   const keywordsParam = encodeURIComponent(keywords);
   const backUrl = conversationId
     ? `/${locale}/topic/references?keywords=${keywordsParam}&conversationId=${conversationId}`
@@ -151,9 +206,8 @@ function RecommendContent() {
   // Stagger the two opening tutor messages so the conversation feels live.
   useEffect(() => {
     if (initialStagedRef.current) return;
-    initialStagedRef.current = true;
-
     if (recommendationsLoading) return;
+    initialStagedRef.current = true;
     let cancelled = false;
     (async () => {
       await new Promise((r) => setTimeout(r, 400));
@@ -197,7 +251,7 @@ function RecommendContent() {
           const parsed = JSON.parse(jsonMatch[0]);
           if (Array.isArray(parsed.topics) && parsed.topics.length > 0) {
             const normalizedTopics = parsed.topics
-              .map((topic: Topic) => normalizeTopic(topic, locale))
+              .map((topic: Topic) => normalizeTopic(topic, locale, fallbackField))
               .filter((topic: Topic | null): topic is Topic => Boolean(topic));
             if (normalizedTopics.length > 0) {
               setTopics(normalizedTopics);
@@ -211,7 +265,7 @@ function RecommendContent() {
       }
     }
     fetchRecommendations();
-  }, [keywords, refs, conversationId, locale]);
+  }, [keywords, refs, conversationId, locale, fallbackField]);
 
   const handleSend = async () => {
     if (!inputText.trim() || chatLoading) return;
@@ -293,7 +347,7 @@ function RecommendContent() {
       topicDuration: topic.estimatedDuration,
       confirmForm: {
         name: topic.name,
-        field: "",
+        field: topic.field || fallbackField,
         description,
         outputFormat: topic.outputFormat,
         duration: topic.estimatedDuration,
@@ -301,7 +355,7 @@ function RecommendContent() {
       },
     });
     router.push(
-      `/${locale}/topic/confirm?name=${encodeURIComponent(topic.name)}&output=${encodeURIComponent(topic.outputFormat)}&duration=${encodeURIComponent(topic.estimatedDuration)}&description=${encodeURIComponent(description)}`
+      `/${locale}/topic/confirm?name=${encodeURIComponent(topic.name)}&field=${encodeURIComponent(topic.field || fallbackField)}&output=${encodeURIComponent(topic.outputFormat)}&duration=${encodeURIComponent(topic.estimatedDuration)}&description=${encodeURIComponent(description)}`
     );
   };
 

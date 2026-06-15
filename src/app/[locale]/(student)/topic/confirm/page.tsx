@@ -13,7 +13,7 @@ function ConfirmContent() {
 
   const draft = typeof window !== "undefined" ? getTopicDraft() : null;
   const [name, setName] = useState(searchParams.get("name") || draft?.confirmForm.name || "");
-  const [field, setField] = useState(draft?.confirmForm.field || "");
+  const [field, setField] = useState(searchParams.get("field") || draft?.confirmForm.field || "");
   const [description, setDescription] = useState(searchParams.get("description") || draft?.confirmForm.description || "");
   const [outputFormat, setOutputFormat] = useState(searchParams.get("output") || draft?.confirmForm.outputFormat || t("outputReport"));
   const [duration, setDuration] = useState(searchParams.get("duration") || draft?.confirmForm.duration || t("duration12"));
