@@ -227,6 +227,64 @@ function ProfileContent() {
     router.push(nextUrl);
   };
 
+  const profileCards = [
+    {
+      icon: "🧭",
+      title: t("sectionInterests"),
+      impact: t("impactInterests"),
+      color: "purple",
+      items: profile?.interests ?? [],
+    },
+    {
+      icon: "🧰",
+      title: t("sectionSkills"),
+      impact: t("impactSkills"),
+      color: "cyan",
+      items: profile?.skills ?? [],
+    },
+    {
+      icon: "⏱️",
+      title: t("sectionTime"),
+      impact: t("impactTime"),
+      color: "amber",
+      text: profile?.timeCommitment,
+    },
+    {
+      icon: "🎯",
+      title: t("sectionPreference"),
+      impact: t("impactPreference"),
+      color: "green",
+      text: profile?.preferences,
+    },
+  ];
+
+  const colorClasses: Record<string, { card: string; icon: string; pill: string; accent: string }> = {
+    purple: {
+      card: "border-purple/20 bg-purple/5",
+      icon: "bg-purple/12 text-purple",
+      pill: "bg-purple/10 text-purple",
+      accent: "text-purple",
+    },
+    cyan: {
+      card: "border-cyan/20 bg-cyan/5",
+      icon: "bg-cyan/12 text-cyan",
+      pill: "bg-cyan/10 text-cyan",
+      accent: "text-cyan",
+    },
+    amber: {
+      card: "border-amber/20 bg-amber/8",
+      icon: "bg-amber/12 text-amber",
+      pill: "bg-white/80 text-text",
+      accent: "text-amber",
+    },
+    green: {
+      card: "border-green/20 bg-green/5",
+      icon: "bg-green/12 text-green",
+      pill: "bg-white/80 text-text",
+      accent: "text-green",
+    },
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
@@ -270,41 +328,69 @@ function ProfileContent() {
       )}
 
       <div className="bg-white rounded-2xl border border-border p-6 space-y-6">
-        <div>
-          <h3 className="text-sm font-semibold text-accent mb-2">{t("sectionOverall")}</h3>
-          <p className="text-text-dim leading-relaxed">{profile?.profile}</p>
+        <div className="rounded-2xl bg-gradient-to-br from-accent/8 via-white to-purple/8 border border-accent/15 p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent/10 text-lg">✨</span>
+            <h3 className="text-sm font-bold text-accent">{t("sectionOverall")}</h3>
+          </div>
+          <p className="text-text leading-relaxed text-base">{profile?.profile}</p>
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold text-accent mb-3">{t("sectionInterests")}</h3>
-          <div className="flex flex-wrap gap-2">
-            {(profile?.interests || []).map((interest, i) => (
-              <span key={i} className="px-3 py-1 bg-purple/10 text-purple text-sm font-medium rounded-full">
-                {interest}
-              </span>
-            ))}
-          </div>
+        <div className="grid gap-4">
+          {profileCards.map((card) => {
+            const classes = colorClasses[card.color];
+            return (
+              <section key={card.title} className={`rounded-2xl border p-5 ${classes.card}`}>
+                <div className="flex items-start gap-4">
+                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl ${classes.icon}`}>
+                    {card.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <h3 className="font-bold text-text">{card.title}</h3>
+                      <span className={`text-xs font-semibold ${classes.accent}`}>{t("usedForRecommendation")}</span>
+                    </div>
+
+                    {card.items ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {card.items.map((item, i) => (
+                          <span key={i} className={`rounded-full px-3 py-1 text-sm font-medium ${classes.pill}`}>
+                            {item}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm font-medium leading-relaxed text-text">{card.text}</p>
+                    )}
+
+                    <div className="mt-4 rounded-xl bg-white/72 border border-white/80 px-4 py-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-text-muted mb-1">
+                        {t("recommendationImpact")}
+                      </p>
+                      <p className="text-sm leading-relaxed text-text-dim">{card.impact}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            );
+          })}
         </div>
 
-        <div>
-          <h3 className="text-sm font-semibold text-accent mb-3">{t("sectionSkills")}</h3>
-          <div className="flex flex-wrap gap-2">
-            {(profile?.skills || []).map((skill, i) => (
-              <span key={i} className="px-3 py-1 bg-cyan/10 text-cyan text-sm font-medium rounded-full">
-                {skill}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 pt-2">
-          <div className="bg-surface2 rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-text-muted mb-1">{t("sectionTime")}</h3>
-            <p className="text-text font-medium">{profile?.timeCommitment}</p>
-          </div>
-          <div className="bg-surface2 rounded-xl p-4">
-            <h3 className="text-xs font-semibold text-text-muted mb-1">{t("sectionPreference")}</h3>
-            <p className="text-text font-medium">{profile?.preferences}</p>
+        <div className="rounded-2xl border border-dashed border-accent/30 bg-accent/5 p-5">
+          <h3 className="text-sm font-bold text-text mb-3">{t("nextRecommendationTitle")}</h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl bg-white/80 p-3">
+              <p className="text-xs font-semibold text-accent mb-1">{t("recommendStep1Title")}</p>
+              <p className="text-xs leading-relaxed text-text-dim">{t("recommendStep1Desc")}</p>
+            </div>
+            <div className="rounded-xl bg-white/80 p-3">
+              <p className="text-xs font-semibold text-purple mb-1">{t("recommendStep2Title")}</p>
+              <p className="text-xs leading-relaxed text-text-dim">{t("recommendStep2Desc")}</p>
+            </div>
+            <div className="rounded-xl bg-white/80 p-3">
+              <p className="text-xs font-semibold text-green mb-1">{t("recommendStep3Title")}</p>
+              <p className="text-xs leading-relaxed text-text-dim">{t("recommendStep3Desc")}</p>
+            </div>
           </div>
         </div>
       </div>

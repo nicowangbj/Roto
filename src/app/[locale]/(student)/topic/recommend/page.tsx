@@ -164,6 +164,7 @@ function RecommendContent() {
   const conversationId = searchParams.get("conversationId");
   const [topics, setTopics] = useState<Topic[]>(() => getDefaultTopics(locale));
   const [expandedTopic, setExpandedTopic] = useState<number | null>(0);
+  const [visibleTopicCount, setVisibleTopicCount] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [inputText, setInputText] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -217,6 +218,15 @@ function RecommendContent() {
       await new Promise((r) => setTimeout(r, 500));
       if (cancelled) return;
       await pushTutorStaged(t("initialMsg2"), 1100);
+      if (cancelled) return;
+      setVisibleTopicCount(1);
+      setExpandedTopic(0);
+
+      for (let i = 1; i < topics.length; i += 1) {
+        await new Promise((r) => setTimeout(r, 650));
+        if (cancelled) return;
+        setVisibleTopicCount(i + 1);
+      }
     })();
 
     return () => {
@@ -330,7 +340,7 @@ function RecommendContent() {
     topicRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const topicListRender = useMemo(() => topics, [topics]);
+  const topicListRender = useMemo(() => topics.slice(0, visibleTopicCount), [topics, visibleTopicCount]);
 
   const handleSelectTopic = (topic: Topic) => {
     const description = [
@@ -390,7 +400,7 @@ function RecommendContent() {
         <div className="bg-white rounded-2xl border border-border p-4 flex-1 roto-panel">
           <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">{t("topicsLabel")}</h4>
           <div className="space-y-2">
-            {topics.map((topic, i) => (
+            {topicListRender.map((topic, i) => (
               <button
                 key={i}
                 onClick={() => handleFocusTopic(i)}
@@ -454,7 +464,7 @@ function RecommendContent() {
             </div>
           ))}
 
-          {/* All recommended topic cards */}
+          {/* Recommended topic cards are revealed one by one after mentor intro. */}
           <div className="space-y-3 pt-2">
             {topicListRender.map((topic, i) => (
               <div
