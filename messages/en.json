@@ -185,7 +185,7 @@
     "researchPoints": "Research focus areas",
     "recording": "Recording — click to stop...",
     "placeholder": "Type your question, or click the microphone to speak...",
-    "initialMsg1": "Based on your interests, I've picked 3 research topics for you. Let me walk you through them!",
+    "initialMsg1": "Based on your interests, I've picked {count} research topics for you. Let me walk you through them!",
     "initialMsg2": "Here's the first one — click the card to expand. Tell me which one you like, or ask anything.",
     "voiceMockUser": "(voice) Tell me more about the second topic",
     "voiceMockReply": "Sure! The second one is about campus vegetation — a great fit for hands-on outdoor observers. Let's take a look —",

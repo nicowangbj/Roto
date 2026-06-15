@@ -130,6 +130,7 @@ function RecommendContent() {
   const [chatLoading, setChatLoading] = useState(false);
   const conversationIdRef = useRef<string | null>(null);
   const initialStagedRef = useRef(false);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(Boolean(keywords || refs));
 
   useEffect(() => {
     conversationIdRef.current = conversationId;
@@ -152,11 +153,12 @@ function RecommendContent() {
     if (initialStagedRef.current) return;
     initialStagedRef.current = true;
 
+    if (recommendationsLoading) return;
     let cancelled = false;
     (async () => {
       await new Promise((r) => setTimeout(r, 400));
       if (cancelled) return;
-      await pushTutorStaged(t("initialMsg1"), 800);
+      await pushTutorStaged(t("initialMsg1", { count: topics.length }), 800);
       if (cancelled) return;
       await new Promise((r) => setTimeout(r, 500));
       if (cancelled) return;
@@ -166,7 +168,7 @@ function RecommendContent() {
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [recommendationsLoading, t, topics.length]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -175,6 +177,7 @@ function RecommendContent() {
   useEffect(() => {
     if (!keywords && !refs) return;
     async function fetchRecommendations() {
+      setRecommendationsLoading(true);
       try {
         const res = await fetch("/api/generate", {
           method: "POST",
@@ -203,6 +206,8 @@ function RecommendContent() {
         }
       } catch {
         // keep default topics
+      } finally {
+        setRecommendationsLoading(false);
       }
     }
     fetchRecommendations();
@@ -239,7 +244,7 @@ function RecommendContent() {
         setMessages((prev) => [...prev, { role: "tutor", content: data.reply }]);
       }
     } catch {
-      setMessages((prev) => [...prev, { role: "tutor", content: t("initialMsg1") }]);
+      setMessages((prev) => [...prev, { role: "tutor", content: t("initialMsg1", { count: topics.length }) }]);
     } finally {
       setTutorTyping(false);
       setChatLoading(false);
