@@ -115,6 +115,8 @@
     "generateProfile": "Done chatting — generate my profile",
     "useDefault": "Quick start with default profile",
     "defaultHint": "If you just want to experience the full flow, you can continue with the default profile. You can always add more information later.",
+    "keepChattingHint": "Keep chatting a little more. The profile button will appear once Roto has enough information.",
+    "readyHint": "Looks like Roto has enough context. Generate your profile to review it in the next step.",
     "tutorTitle": "Roto Research Mentor",
     "tutorStatus": "Learning about your interests and skills",
     "dialogNotes": "Conversation notes",

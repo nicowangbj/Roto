@@ -66,6 +66,29 @@ function TopicChatContent() {
     router.push(`/${locale}/topic/profile?quickStart=1`);
   };
 
+  const userMessages = messages.filter(
+    (message) => message.role === "user" && message.content.trim().length > 0
+  );
+  const totalUserInputLength = userMessages.reduce((sum, message) => sum + message.content.trim().length, 0);
+  const canGenerateProfile = Boolean(conversationId) && (
+    notes.length >= 3 ||
+    userMessages.length >= 3 ||
+    totalUserInputLength >= 140
+  );
+  const chatGuardrails = locale === "zh"
+    ? [
+        "当前是信息收集聊天阶段，不要直接生成或展示用户画像报告。",
+        "不要输出带有“兴趣/技能/时间/偏好/动机”等栏目式画像总结。",
+        "每次只追问 1-2 个自然问题，尽量简短。",
+        "当你认为信息足够时，只需提示学生点击页面下方的“生成画像报告”按钮进入下一步，不要在聊天中写出画像内容。",
+      ].join("\n")
+    : [
+        "This is the information-gathering chat stage. Do not directly generate or display a user profile report.",
+        "Do not output profile-style sections such as Interests, Skills, Time, Preferences, or Motivation.",
+        "Ask only 1-2 natural follow-up questions at a time and keep replies concise.",
+        "When you have enough information, simply guide the student to click the profile-generation button below to continue. Do not write the profile in the chat.",
+      ].join("\n");
+
   // Debounced profile-note generation: fires ~2.5s after the last chat update,
   // skips when user messages haven't changed since the last run.
   useEffect(() => {
@@ -184,6 +207,7 @@ function TopicChatContent() {
         <div className="flex-1 min-h-0 bg-white rounded-2xl border border-border p-5">
           <ChatWindow
             strategyCode="AI-S01"
+            context={chatGuardrails}
             placeholder={t("placeholder")}
             initialMessages={[
               {
@@ -201,13 +225,18 @@ function TopicChatContent() {
 
         <div className="pt-4 mt-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleGenerateProfile}
-              disabled={!conversationId}
-              className="flex-1 py-3.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl disabled:opacity-40 transition-colors shadow-lg shadow-accent/20"
-            >
-              {t("generateProfile")}
-            </button>
+            {canGenerateProfile ? (
+              <button
+                onClick={handleGenerateProfile}
+                className="flex-1 py-3.5 bg-accent hover:bg-accent/90 text-white font-semibold rounded-xl transition-colors shadow-lg shadow-accent/20"
+              >
+                {t("generateProfile")}
+              </button>
+            ) : (
+              <div className="flex-1 rounded-xl border border-dashed border-border bg-white/70 px-4 py-3 text-sm text-text-muted">
+                {t("keepChattingHint")}
+              </div>
+            )}
             <button
               onClick={handleQuickStart}
               className="sm:w-auto px-6 py-3.5 border border-border hover:border-accent hover:text-accent text-text-dim font-semibold rounded-xl transition-colors"
@@ -216,7 +245,7 @@ function TopicChatContent() {
             </button>
           </div>
           <p className="text-xs text-text-muted mt-3">
-            {t("defaultHint")}
+            {canGenerateProfile ? t("readyHint") : t("defaultHint")}
           </p>
         </div>
       </div>

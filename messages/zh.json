@@ -115,6 +115,8 @@
     "generateProfile": "聊够了，生成我的画像报告",
     "useDefault": "先用默认画像快速开始",
     "defaultHint": "如果你只是想先体验完整流程，可以直接使用默认画像继续，后面仍然可以再补充信息。",
+    "keepChattingHint": "再聊一小会儿。Roto 收集到足够信息后，画像生成按钮会出现。",
+    "readyHint": "Roto 已经有足够上下文了。点击生成画像，在下一步查看并确认。",
     "tutorTitle": "Roto 科研导师",
     "tutorStatus": "正在了解你的兴趣和能力",
     "dialogNotes": "对话要点",
