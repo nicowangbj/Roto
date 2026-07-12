@@ -12,12 +12,42 @@ model User {
   name      String
   email     String   @unique
   password  String?
+  role      String   @default("student") // student, teacher, admin
   avatar    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   projects      Project[]
   conversations Conversation[]
+  teachingClasses TeacherClass[] @relation("TeacherClasses")
+  classEnrollments ClassEnrollment[]
+  phaseReviews PhaseReview[] @relation("TeacherPhaseReviews")
+}
+
+model TeacherClass {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  inviteCode  String   @unique
+  mode        String   @default("observe") // observe, approval_required
+  teacherId   String
+  teacher     User     @relation("TeacherClasses", fields: [teacherId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  enrollments ClassEnrollment[]
+  phaseReviews PhaseReview[]
+}
+
+model ClassEnrollment {
+  id        String   @id @default(cuid())
+  classId   String
+  class     TeacherClass @relation(fields: [classId], references: [id])
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@unique([classId, studentId])
 }
 
 model Project {
@@ -69,6 +99,23 @@ model Phase {
   updatedAt   DateTime @updatedAt
 
   tasks Task[]
+  reviews PhaseReview[]
+}
+
+model PhaseReview {
+  id        String   @id @default(cuid())
+  phaseId   String
+  phase     Phase    @relation(fields: [phaseId], references: [id])
+  classId   String
+  class     TeacherClass @relation(fields: [classId], references: [id])
+  teacherId String
+  teacher   User     @relation("TeacherPhaseReviews", fields: [teacherId], references: [id])
+  status    String   @default("pending") // pending, approved, revision_requested
+  feedback  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([phaseId, classId])
 }
 
 model Task {

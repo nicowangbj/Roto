@@ -182,6 +182,35 @@ ${priorSubmissions || "None"}`;
         data: { status: "active" },
       });
     } else {
+      const approvalEnrollment = await prisma.classEnrollment.findFirst({
+        where: {
+          studentId: user.id,
+          class: { mode: "approval_required" },
+        },
+        include: { class: true },
+      });
+
+      if (approvalEnrollment) {
+        await prisma.phase.update({
+          where: { id: task.phaseId },
+          data: { status: "submitted_for_review" },
+        });
+        await prisma.phaseReview.upsert({
+          where: {
+            phaseId_classId: {
+              phaseId: task.phaseId,
+              classId: approvalEnrollment.classId,
+            },
+          },
+          update: { status: "pending", feedback: null, teacherId: approvalEnrollment.class.teacherId },
+          create: {
+            phaseId: task.phaseId,
+            classId: approvalEnrollment.classId,
+            teacherId: approvalEnrollment.class.teacherId,
+            status: "pending",
+          },
+        });
+      } else {
       await prisma.phase.update({
         where: { id: task.phaseId },
         data: { status: "completed" },
@@ -204,6 +233,7 @@ ${priorSubmissions || "None"}`;
             data: { status: "active" },
           });
         }
+      }
       }
     }
   }
