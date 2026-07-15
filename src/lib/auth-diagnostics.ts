@@ -54,12 +54,25 @@ export function authErrorMessage(code: AuthErrorCode, zh: boolean): string {
       : "Login service is missing session configuration";
   }
 
-  if (
-    code === "DATABASE_CONFIG_MISSING" ||
-    code === "DATABASE_TOKEN_MISSING" ||
-    code === "DATABASE_SCHEMA_MISSING" ||
-    code === "DATABASE_QUERY_FAILED"
-  ) {
+  if (code === "DATABASE_CONFIG_MISSING") {
+    return zh
+      ? "线上数据库地址未配置，请在 Vercel 中配置 TURSO_DATABASE_URL"
+      : "Online database URL is missing. Configure TURSO_DATABASE_URL in Vercel";
+  }
+
+  if (code === "DATABASE_TOKEN_MISSING") {
+    return zh
+      ? "线上数据库 token 未配置，请在 Vercel 中配置 TURSO_AUTH_TOKEN"
+      : "Online database token is missing. Configure TURSO_AUTH_TOKEN in Vercel";
+  }
+
+  if (code === "DATABASE_SCHEMA_MISSING") {
+    return zh
+      ? "线上数据库表结构未同步，请运行数据库迁移"
+      : "Online database schema is out of sync. Run the database migration";
+  }
+
+  if (code === "DATABASE_QUERY_FAILED") {
     return zh
       ? "登录服务暂时无法连接用户数据库，请联系管理员"
       : "Login service cannot reach the user database right now";

@@ -56,7 +56,9 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || tc("operationFailed"));
+        const diagnosticCode =
+          typeof data.code === "string" ? ` (${data.code})` : "";
+        setError(`${data.error || tc("operationFailed")}${diagnosticCode}`);
         return;
       }
 
