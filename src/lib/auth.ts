@@ -2,8 +2,26 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
 
-const secretKey = process.env.SESSION_SECRET!;
-const encodedKey = new TextEncoder().encode(secretKey);
+function getSessionSecret() {
+  const secret =
+    process.env.SESSION_SECRET ||
+    process.env.AUTH_SECRET ||
+    process.env.NEXTAUTH_SECRET;
+
+  if (secret) return secret;
+
+  if (process.env.NODE_ENV !== "production") {
+    return "roto-local-development-session-secret";
+  }
+
+  throw new Error(
+    "Session secret is not configured. Set SESSION_SECRET, AUTH_SECRET, or NEXTAUTH_SECRET."
+  );
+}
+
+function getEncodedKey() {
+  return new TextEncoder().encode(getSessionSecret());
+}
 
 // ─── Password ───
 
@@ -30,14 +48,14 @@ export async function encrypt(payload: SessionPayload): Promise<string> {
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
-    .sign(encodedKey);
+    .sign(getEncodedKey());
 }
 
 export async function decrypt(
   token: string
 ): Promise<{ userId: string } | null> {
   try {
-    const { payload } = await jwtVerify(token, encodedKey, {
+    const { payload } = await jwtVerify(token, getEncodedKey(), {
       algorithms: ["HS256"],
     });
     return { userId: payload.userId as string };
