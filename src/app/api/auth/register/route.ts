@@ -37,7 +37,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { prisma } = await import("@/lib/prisma");
-    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const existing = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
     if (existing) {
       return NextResponse.json(
         { error: zh ? "该邮箱已被注册" : "This email is already registered" },
@@ -48,6 +51,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await hashPassword(password);
     const user = await prisma.user.create({
       data: { name, email: normalizedEmail, password: hashedPassword },
+      select: { id: true, name: true, email: true },
     });
 
     const { token, expiresAt } = await createSessionToken(user.id);

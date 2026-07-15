@@ -15,7 +15,7 @@ async function attachLegacyTeacherClasses(userId: string, schoolId: string) {
   });
 }
 
-export async function ensureSchoolWorkspace(user: { id: string; name: string; role: string }) {
+export async function ensureSchoolWorkspace(user: { id: string; name: string; role?: string }) {
   const membership = await getPrimarySchoolMembership(user.id);
   if (membership) {
     await attachLegacyTeacherClasses(user.id, membership.schoolId);

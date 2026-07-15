@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function GET() {
   if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const user = await getSessionUser();
+  const user = await getSessionUser({ includeRole: true });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const memberships = await prisma.schoolMembership.findMany({
@@ -56,7 +56,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const user = await getSessionUser();
+  const user = await getSessionUser({ includeRole: true });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const user = await getSessionUser();
+  const user = await getSessionUser({ includeRole: true });
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();

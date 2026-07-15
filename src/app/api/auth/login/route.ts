@@ -22,7 +22,10 @@ export async function POST(req: NextRequest) {
     }
 
     const { prisma } = await import("@/lib/prisma");
-    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { id: true, name: true, email: true, password: true },
+    });
     if (!user || !user.password) {
       return NextResponse.json(
         { error: zh ? "邮箱或密码错误" : "Incorrect email or password" },
