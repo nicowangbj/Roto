@@ -25,6 +25,10 @@ npm install
 # 数据库
 DATABASE_URL="file:./dev.db"
 
+# 线上 Turso/libSQL 数据库（二选一：可使用 TURSO_DATABASE_URL 或 DATABASE_URL）
+# TURSO_DATABASE_URL="libsql://your-database.turso.io"
+# TURSO_AUTH_TOKEN="your-turso-token"
+
 # Session 密钥（必填，用于用户登录鉴权，可用以下命令生成）
 # openssl rand -base64 32
 SESSION_SECRET="替换为你自己生成的随机字符串"
@@ -73,6 +77,41 @@ npm run dev
 ## Prompt 配置后台部署
 
 Prompt 配置后台用于维护 `/admin/strategies` 中的 AI 策略，不应暴露在 C 端产品部署中。推荐使用同一个 GitHub 仓库创建两个 Vercel Project，并让它们连接同一套数据库。
+
+## Roto 个人版 / 学校版独立部署
+
+Roto 现在支持用同一套代码部署成两个彼此独立的网站。推荐在 Vercel 中创建两个 Project，两个 Project 都连接同一个 GitHub 仓库，但使用不同环境变量和不同域名。
+
+### 个人探索版
+
+个人探索版面向学生自主使用，首页展示个人科研探索产品介绍，并隐藏学校入口。
+
+```bash
+NEXT_PUBLIC_APP_VARIANT="personal"
+SESSION_SECRET="用 openssl rand -base64 32 生成"
+TURSO_DATABASE_URL="libsql://your-database.turso.io"
+TURSO_AUTH_TOKEN="your-turso-token"
+```
+
+可选：如果需要从个人站跳转到学校站，可以配置：
+
+```bash
+NEXT_PUBLIC_SCHOOL_SITE_URL="https://your-school-site.vercel.app"
+```
+
+### 学校版 / For School
+
+学校版面向国际学校、教师和学校管理员，首页展示 EE、EPQ、学校科研项目和教师监督功能，并开放 `/school`、`/school/admin`、`/school/teacher`、`/school/student` 等学校工作区入口。
+
+```bash
+NEXT_PUBLIC_APP_VARIANT="school"
+```
+
+可选：如果需要从学校站跳转回个人站，可以配置：
+
+```bash
+NEXT_PUBLIC_PERSONAL_SITE_URL="https://roto-research.vercel.app"
+```
 
 ### C 端产品部署
 

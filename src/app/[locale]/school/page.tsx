@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { appVariant, personalSiteUrl } from "@/lib/app-variant";
+import { redirect } from "next/navigation";
 
 export default async function SchoolHomePage({
   params,
@@ -6,6 +8,10 @@ export default async function SchoolHomePage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  if (appVariant !== "school") {
+    redirect(`/${locale}`);
+  }
+
   const zh = locale === "zh";
 
   return (
@@ -24,10 +30,10 @@ export default async function SchoolHomePage({
             </div>
           </Link>
           <Link
-            href={`/${locale}/welcome`}
+            href={personalSiteUrl || `/${locale}`}
             className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-dim transition-colors hover:border-accent hover:text-accent"
           >
-            {zh ? "个人版" : "Personal version"}
+            {personalSiteUrl ? (zh ? "个人版" : "Personal version") : zh ? "学校版首页" : "School home"}
           </Link>
         </header>
 
@@ -42,7 +48,22 @@ export default async function SchoolHomePage({
           </p>
         </section>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Link
+            href={`/${locale}/school/admin`}
+            className="rounded-2xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-green hover:bg-green/5"
+          >
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-green/10 text-xl text-green">
+              A
+            </div>
+            <h2 className="text-xl font-bold text-text">{zh ? "学校管理员后台" : "School admin"}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-text-dim">
+              {zh
+                ? "创建学校 workspace，管理老师、班级和学校科研项目概览。"
+                : "Create a school workspace, manage teachers, and view class-level research activity."}
+            </p>
+          </Link>
+
           <Link
             href={`/${locale}/school/teacher`}
             className="rounded-2xl border border-border bg-white p-6 shadow-sm transition-colors hover:border-accent hover:bg-accent/5"

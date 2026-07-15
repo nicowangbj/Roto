@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session-user";
+import { appVariant } from "@/lib/app-variant";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ studentId: string }> }
 ) {
+  if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const teacher = await getSessionUser();
   if (!teacher) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -16,8 +19,11 @@ export async function GET(
     where: {
       studentId,
       class: {
-        teacherId: teacher.id,
         ...(classId ? { id: classId } : {}),
+        OR: [
+          { teacherId: teacher.id },
+          { school: { memberships: { some: { userId: teacher.id, role: "school_admin" } } } },
+        ],
       },
     },
     include: { class: true },

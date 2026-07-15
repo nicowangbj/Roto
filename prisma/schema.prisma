@@ -22,6 +22,34 @@ model User {
   teachingClasses TeacherClass[] @relation("TeacherClasses")
   classEnrollments ClassEnrollment[]
   phaseReviews PhaseReview[] @relation("TeacherPhaseReviews")
+  schoolMemberships SchoolMembership[]
+  ownedSchools School[] @relation("SchoolOwner")
+}
+
+model School {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  owner       User     @relation("SchoolOwner", fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships SchoolMembership[]
+  classes TeacherClass[]
+}
+
+model SchoolMembership {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  role      String   @default("student") // school_admin, teacher, student
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, userId])
 }
 
 model TeacherClass {
@@ -30,6 +58,8 @@ model TeacherClass {
   description String?
   inviteCode  String   @unique
   mode        String   @default("observe") // observe, approval_required
+  schoolId    String?
+  school      School?  @relation(fields: [schoolId], references: [id])
   teacherId   String
   teacher     User     @relation("TeacherClasses", fields: [teacherId], references: [id])
   createdAt   DateTime @default(now())

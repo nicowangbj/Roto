@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session-user";
+import { ensureSchoolWorkspace, userCanTeachInSchool } from "@/lib/school";
+import { appVariant } from "@/lib/app-variant";
 import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -8,12 +10,20 @@ function createInviteCode() {
 }
 
 export async function GET() {
+  if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  const membership = await ensureSchoolWorkspace(user);
+
   const classes = await prisma.teacherClass.findMany({
-    where: { teacherId: user.id },
+    where: membership.role === "school_admin"
+      ? { schoolId: membership.schoolId }
+      : { schoolId: membership.schoolId, teacherId: user.id },
     include: {
+      school: true,
+      teacher: { select: { id: true, name: true, email: true } },
       enrollments: {
         include: {
           student: {
@@ -44,6 +54,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -51,8 +63,20 @@ export async function POST(req: NextRequest) {
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const description = typeof body.description === "string" ? body.description.trim() : "";
   const mode = body.mode === "approval_required" ? "approval_required" : "observe";
+  const requestedSchoolId = typeof body.schoolId === "string" ? body.schoolId : "";
 
   if (!name) return NextResponse.json({ error: "Class name is required" }, { status: 400 });
+
+  const membership = requestedSchoolId
+    ? await prisma.schoolMembership.findUnique({
+        where: { schoolId_userId: { schoolId: requestedSchoolId, userId: user.id } },
+        include: { school: true },
+      })
+    : await ensureSchoolWorkspace(user);
+
+  if (!membership || !(await userCanTeachInSchool(user.id, membership.schoolId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   let inviteCode = createInviteCode();
   for (let i = 0; i < 5; i += 1) {
@@ -69,9 +93,10 @@ export async function POST(req: NextRequest) {
         description: description || null,
         mode,
         inviteCode,
+        schoolId: membership.schoolId,
         teacherId: user.id,
       },
-      include: { enrollments: true },
+      include: { school: true, teacher: { select: { id: true, name: true, email: true } }, enrollments: true },
     });
   });
 

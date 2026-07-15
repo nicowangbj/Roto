@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session-user";
+import { appVariant } from "@/lib/app-variant";
 import { NextRequest, NextResponse } from "next/server";
 
 async function unlockNextPhase(phaseId: string) {
@@ -29,6 +30,8 @@ async function unlockNextPhase(phaseId: string) {
 }
 
 export async function POST(req: NextRequest) {
+  if (appVariant !== "school") return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const teacher = await getSessionUser();
   if (!teacher) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -43,7 +46,13 @@ export async function POST(req: NextRequest) {
   }
 
   const teacherClass = await prisma.teacherClass.findFirst({
-    where: { id: classId, teacherId: teacher.id },
+    where: {
+      id: classId,
+      OR: [
+        { teacherId: teacher.id },
+        { school: { memberships: { some: { userId: teacher.id, role: "school_admin" } } } },
+      ],
+    },
   });
   if (!teacherClass) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 

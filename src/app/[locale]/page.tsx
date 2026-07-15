@@ -4,12 +4,18 @@ import Link from "next/link";
 import RotoAvatar from "@/components/RotoAvatar";
 import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
+import PersonalLanding from "@/components/landing/PersonalLanding";
+import { appVariant } from "@/lib/app-variant";
 
 export default function Home() {
   const t = useTranslations("landing");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+
+  if (appVariant === "personal") {
+    return <PersonalLanding />;
+  }
 
   function switchLocale() {
     const targetLocale = locale === "en" ? "zh" : "en";

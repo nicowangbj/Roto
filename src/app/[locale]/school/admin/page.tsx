@@ -1,7 +1,8 @@
-import { redirect } from "next/navigation";
+import SchoolAdminDashboard from "@/components/school/SchoolAdminDashboard";
 import { appVariant } from "@/lib/app-variant";
+import { redirect } from "next/navigation";
 
-export default async function SchoolJoinRedirectPage({
+export default async function SchoolAdminPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -11,5 +12,5 @@ export default async function SchoolJoinRedirectPage({
     redirect(`/${locale}`);
   }
 
-  redirect(`/${locale}/school/student`);
+  return <SchoolAdminDashboard />;
 }

@@ -2,14 +2,27 @@
 
 import Link from "next/link";
 import { useLocale } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { appVariant, personalSiteUrl } from "@/lib/app-variant";
 
 export default function SchoolStudentPage() {
   const locale = useLocale();
+  const router = useRouter();
   const zh = locale === "zh";
   const [inviteCode, setInviteCode] = useState("");
   const [message, setMessage] = useState("");
   const [joining, setJoining] = useState(false);
+
+  useEffect(() => {
+    if (appVariant !== "school") {
+      router.replace(`/${locale}`);
+    }
+  }, [locale, router]);
+
+  if (appVariant !== "school") {
+    return null;
+  }
 
   async function joinClass() {
     if (!inviteCode.trim() || joining) return;
@@ -48,10 +61,10 @@ export default function SchoolStudentPage() {
             </div>
           </div>
           <Link
-            href={`/${locale}/welcome`}
+            href={personalSiteUrl || `/${locale}`}
             className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-dim transition-colors hover:border-accent hover:text-accent"
           >
-            {zh ? "个人版" : "Personal version"}
+            {personalSiteUrl ? (zh ? "个人版" : "Personal version") : zh ? "学校版首页" : "School home"}
           </Link>
         </header>
 
