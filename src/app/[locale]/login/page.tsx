@@ -1,13 +1,64 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import RotoAvatar from "@/components/RotoAvatar";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 
-type Mode = "login" | "register";
+type Mode = "login" | "register" | "resetRequest" | "resetConfirm";
+
+function isStrongPassword(password: string) {
+  return password.length >= 8 && /[A-Za-z]/.test(password) && /\d/.test(password);
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  autoComplete: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  const t = useTranslations("login");
+
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-semibold text-text-dim mb-1.5">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          id={id}
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          required
+          autoComplete={autoComplete}
+          className="w-full px-4 py-3 pr-16 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((current) => !current)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-text-muted hover:text-accent transition-colors"
+          aria-label={visible ? t("hidePassword") : t("showPassword")}
+        >
+          {visible ? t("hidePassword") : t("showPassword")}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,23 +67,69 @@ export default function LoginPage() {
   const t = useTranslations("login");
   const tc = useTranslations("common");
 
-  function switchLocale() {
-    const targetLocale = locale === "en" ? "zh" : "en";
-    router.push(pathname.replace(`/${locale}`, `/${targetLocale}`));
-  }
   const [mode, setMode] = useState<Mode>("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetToken, setResetToken] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const passwordRules = useMemo(
+    () => [
+      { label: t("passwordRuleLength"), met: password.length >= 8 },
+      { label: t("passwordRuleLetters"), met: /[A-Za-z]/.test(password) },
+      { label: t("passwordRuleNumbers"), met: /\d/.test(password) },
+    ],
+    [password, t]
+  );
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("resetToken");
+    if (token) {
+      setResetToken(token);
+      setMode("resetConfirm");
+    }
+  }, []);
+
+  function switchLocale() {
+    const targetLocale = locale === "en" ? "zh" : "en";
+    router.push(pathname.replace(`/${locale}`, `/${targetLocale}`));
+  }
+
+  function switchMode(nextMode: Mode) {
+    setMode(nextMode);
+    setError("");
+    setNotice("");
+    setPassword("");
+    setConfirmPassword("");
+  }
+
+  function getSubmitLabel() {
+    if (loading && mode === "login") return t("loggingIn");
+    if (loading && mode === "register") return t("creatingAccount");
+    if (loading && mode === "resetRequest") return t("sendingReset");
+    if (loading && mode === "resetConfirm") return t("updatingPassword");
+    if (mode === "login") return t("loginBtn");
+    if (mode === "register") return t("registerBtn");
+    if (mode === "resetRequest") return t("sendResetLink");
+    return t("updatePassword");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setNotice("");
 
-    if (mode === "register" && password !== confirmPassword) {
+    if ((mode === "register" || mode === "resetConfirm") && !isStrongPassword(password)) {
+      setError(t("passwordWeak"));
+      return;
+    }
+
+    if ((mode === "register" || mode === "resetConfirm") && password !== confirmPassword) {
       setError(t("passwordMismatch"));
       return;
     }
@@ -40,12 +137,23 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const url =
-        mode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const body =
-        mode === "login"
-          ? { email, password }
-          : { name, email, password };
+      let url = "/api/auth/login";
+      let body: Record<string, string> = { email, password };
+
+      if (mode === "register") {
+        url = "/api/auth/register";
+        body = { name, email, password };
+      }
+
+      if (mode === "resetRequest") {
+        url = "/api/auth/password-reset/request";
+        body = { email };
+      }
+
+      if (mode === "resetConfirm") {
+        url = "/api/auth/password-reset/confirm";
+        body = { token: resetToken, password };
+      }
 
       const res = await fetch(url, {
         method: "POST",
@@ -56,9 +164,12 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        const diagnosticCode =
-          typeof data.code === "string" ? ` (${data.code})` : "";
-        setError(`${data.error || tc("operationFailed")}${diagnosticCode}`);
+        setError(data.error || tc("operationFailed"));
+        return;
+      }
+
+      if (mode === "resetRequest") {
+        setNotice(data.message || t("resetEmailSent"));
         return;
       }
 
@@ -72,6 +183,23 @@ export default function LoginPage() {
       setLoading(false);
     }
   }
+
+  const formTitle =
+    mode === "login"
+      ? t("loginTitle")
+      : mode === "register"
+        ? t("registerTitle")
+        : mode === "resetRequest"
+          ? t("resetTitle")
+          : t("resetConfirmTitle");
+  const formSubtitle =
+    mode === "login"
+      ? t("loginSubtitle")
+      : mode === "register"
+        ? t("registerSubtitle")
+        : mode === "resetRequest"
+          ? t("resetSubtitle")
+          : t("resetConfirmSubtitle");
 
   return (
     <div className="roto-grid min-h-screen flex flex-col relative overflow-hidden">
@@ -140,7 +268,7 @@ export default function LoginPage() {
           </section>
 
           <div className="w-full max-w-md lg:ml-auto">
-            <div className="roto-panel rounded-[32px] p-8 bg-white/90">
+            <div className="roto-panel rounded-[32px] p-7 sm:p-8 bg-white/90">
               <div className="mb-6 lg:hidden flex items-center gap-3">
                 <RotoAvatar size="sm" scene="signin" />
                 <div>
@@ -149,29 +277,38 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex bg-surface2 rounded-2xl p-1.5 mb-8">
-                <button
-                  onClick={() => { setMode("login"); setError(""); setConfirmPassword(""); }}
-                  className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-                    mode === "login" ? "bg-white text-accent shadow-sm" : "text-text-muted hover:text-text-dim"
-                  }`}
-                >
-                  {t("tabLogin")}
-                </button>
-                <button
-                  onClick={() => { setMode("register"); setError(""); }}
-                  className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
-                    mode === "register" ? "bg-white text-accent shadow-sm" : "text-text-muted hover:text-text-dim"
-                  }`}
-                >
-                  {t("tabRegister")}
-                </button>
+              <div className="mb-5">
+                <h2 className="text-2xl font-black text-brand-ink">{formTitle}</h2>
+                <p className="mt-1.5 text-sm leading-6 text-text-dim">{formSubtitle}</p>
               </div>
+
+              {mode !== "resetConfirm" && (
+                <div className="flex bg-surface2 rounded-2xl p-1.5 mb-6">
+                  <button
+                    type="button"
+                    onClick={() => switchMode("login")}
+                    className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                      mode === "login" ? "bg-white text-accent shadow-sm" : "text-text-muted hover:text-text-dim"
+                    }`}
+                  >
+                    {t("tabLogin")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode("register")}
+                    className={`flex-1 py-2.5 text-sm font-semibold rounded-xl transition-all ${
+                      mode === "register" ? "bg-white text-accent shadow-sm" : "text-text-muted hover:text-text-dim"
+                    }`}
+                  >
+                    {t("tabRegister")}
+                  </button>
+                </div>
+              )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 {mode === "register" && (
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-text-dim mb-1.5">
+                    <label htmlFor="name" className="block text-sm font-semibold text-text-dim mb-1.5">
                       {t("nameLabel")}
                     </label>
                     <input
@@ -181,57 +318,78 @@ export default function LoginPage() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder={t("namePlaceholder")}
                       required
+                      autoComplete="name"
                       className="w-full px-4 py-3 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
                     />
                   </div>
                 )}
 
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-text-dim mb-1.5">
-                    {t("emailLabel")}
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t("emailPlaceholder")}
-                    required
-                    className="w-full px-4 py-3 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-text-dim mb-1.5">
-                    {t("passwordLabel")}
-                  </label>
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={mode === "register" ? t("passwordPlaceholderRegister") : t("passwordPlaceholderLogin")}
-                    required
-                    minLength={mode === "register" ? 6 : undefined}
-                    className="w-full px-4 py-3 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
-                  />
-                </div>
-
-                {mode === "register" && (
+                {(mode === "login" || mode === "register" || mode === "resetRequest") && (
                   <div>
-                    <label htmlFor="confirmPassword" className="block text-sm font-medium text-text-dim mb-1.5">
-                      {t("confirmPasswordLabel")}
+                    <label htmlFor="email" className="block text-sm font-semibold text-text-dim mb-1.5">
+                      {t("emailLabel")}
                     </label>
                     <input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder={t("confirmPasswordPlaceholder")}
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={t("emailPlaceholder")}
                       required
-                      minLength={6}
+                      autoComplete="email"
                       className="w-full px-4 py-3 bg-surface2 border border-border rounded-2xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
                     />
+                  </div>
+                )}
+
+                {(mode === "login" || mode === "register" || mode === "resetConfirm") && (
+                  <PasswordField
+                    id="password"
+                    label={mode === "resetConfirm" ? t("newPasswordLabel") : t("passwordLabel")}
+                    value={password}
+                    onChange={setPassword}
+                    placeholder={mode === "login" ? t("passwordPlaceholderLogin") : t("passwordPlaceholderRegister")}
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  />
+                )}
+
+                {(mode === "register" || mode === "resetConfirm") && (
+                  <>
+                    <div className="rounded-2xl bg-brand-cloud/45 border border-border px-4 py-3 space-y-1.5">
+                      {passwordRules.map((rule) => (
+                        <div
+                          key={rule.label}
+                          className={`text-xs font-medium ${rule.met ? "text-green" : "text-text-muted"}`}
+                        >
+                          {rule.met ? "✓" : "•"} {rule.label}
+                        </div>
+                      ))}
+                    </div>
+                    <PasswordField
+                      id="confirmPassword"
+                      label={t("confirmPasswordLabel")}
+                      value={confirmPassword}
+                      onChange={setConfirmPassword}
+                      placeholder={t("confirmPasswordPlaceholder")}
+                      autoComplete="new-password"
+                    />
+                    {confirmPassword && (
+                      <div className={`text-xs font-semibold ${passwordsMatch ? "text-green" : "text-rose"}`}>
+                        {passwordsMatch ? t("passwordsMatch") : t("passwordMismatch")}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {mode === "login" && (
+                  <div className="flex justify-end -mt-1">
+                    <button
+                      type="button"
+                      onClick={() => switchMode("resetRequest")}
+                      className="text-xs font-semibold text-text-muted hover:text-accent transition-colors"
+                    >
+                      {t("forgotPassword")}
+                    </button>
                   </div>
                 )}
 
@@ -241,18 +399,39 @@ export default function LoginPage() {
                   </div>
                 )}
 
+                {notice && (
+                  <div className="text-sm text-green bg-green/8 border border-green/20 rounded-2xl px-4 py-3">
+                    {notice}
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full py-3.5 bg-accent hover:bg-accent/90 disabled:bg-accent/50 text-white font-semibold rounded-2xl transition-colors shadow-lg shadow-accent/20"
                 >
-                  {loading ? tc("processing") : mode === "login" ? t("loginBtn") : t("registerBtn")}
+                  {getSubmitLabel()}
                 </button>
               </form>
 
-              <p className="mt-6 text-center text-xs text-text-muted">
-                {mode === "login" ? t("hintLogin") : t("hintRegister")}
-              </p>
+              <div className="mt-6 text-center text-xs text-text-muted">
+                {mode === "login" && (
+                  <button type="button" onClick={() => switchMode("register")} className="hover:text-accent">
+                    {t("hintLogin")}
+                  </button>
+                )}
+                {mode === "register" && (
+                  <button type="button" onClick={() => switchMode("login")} className="hover:text-accent">
+                    {t("hintRegister")}
+                  </button>
+                )}
+                {mode === "resetRequest" && (
+                  <button type="button" onClick={() => switchMode("login")} className="hover:text-accent">
+                    {t("backToLogin")}
+                  </button>
+                )}
+                {mode === "resetConfirm" && t("resetConfirmHint")}
+              </div>
             </div>
 
             <div className="text-center mt-6">

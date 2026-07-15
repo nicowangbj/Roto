@@ -1,4 +1,5 @@
 import { verifyPassword, createSessionToken, setSessionCookie } from "@/lib/auth";
+import { recordLastLogin } from "@/lib/login-audit";
 import {
   authErrorMessage,
   classifyAuthError,
@@ -40,6 +41,8 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       );
     }
+
+    await recordLastLogin(prisma, user.id);
 
     const { token, expiresAt } = await createSessionToken(user.id);
     const response = NextResponse.json({

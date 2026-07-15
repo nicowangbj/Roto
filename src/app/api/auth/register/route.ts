@@ -1,4 +1,6 @@
 import { hashPassword, createSessionToken, setSessionCookie } from "@/lib/auth";
+import { recordLastLogin } from "@/lib/login-audit";
+import { isStrongPassword } from "@/lib/password-reset";
 import {
   authErrorMessage,
   classifyAuthError,
@@ -29,9 +31,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (password.length < 6) {
+    if (!isStrongPassword(password)) {
       return NextResponse.json(
-        { error: zh ? "密码至少需要 6 个字符" : "Password must be at least 6 characters" },
+        {
+          error: zh
+            ? "密码至少需要 8 位，并包含字母和数字"
+            : "Password must be at least 8 characters and include letters and numbers",
+        },
         { status: 400 }
       );
     }
@@ -53,6 +59,8 @@ export async function POST(req: NextRequest) {
       data: { name, email: normalizedEmail, password: hashedPassword },
       select: { id: true, name: true, email: true },
     });
+
+    await recordLastLogin(prisma, user.id);
 
     const { token, expiresAt } = await createSessionToken(user.id);
     const response = NextResponse.json(

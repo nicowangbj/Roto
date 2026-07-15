@@ -36,6 +36,11 @@ SESSION_SECRET="替换为你自己生成的随机字符串"
 # Gemini API Key（选填，不填则 AI 功能使用占位回复）
 GEMINI_API_KEY=""
 
+# 密码重置邮件（可选；开启 Forgot password 功能需要）
+# RESEND_API_KEY="re_..."
+# PASSWORD_RESET_FROM="Roto <noreply@your-domain.com>"
+# NEXT_PUBLIC_APP_URL="https://roto-research.vercel.app"
+
 # 应用名称
 NEXT_PUBLIC_APP_NAME="研途 ResearchFlow"
 
